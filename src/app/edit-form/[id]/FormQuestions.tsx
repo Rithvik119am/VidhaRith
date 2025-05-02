@@ -16,7 +16,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner"; // Using sonner for notifications
-
+import AiQuestionGenerator from '@/components/AiQuestionGenerator';
 // Zod schema for form validation
 const optionSchema = z.object({
   value: z.string().min(1, { message: "Option cannot be empty." })
@@ -186,6 +186,7 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
             </Table>
         </div>
       </div>
+      <AiQuestionGenerator formId={formId} />
 
 
       {/* Add New Question Form */}

@@ -9,7 +9,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-
+import { internalQuery } from "./_generated/server";
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -98,13 +98,13 @@ export const sendFile = mutation({
       storageId: args.storageId,
       name: args.name,
       type: args.type,
-      userId: identity.subject,
+      userId: identity.tokenIdentifier,
       // Optional: Pass size if you added it to internal_createFileRecord args/schema
       // size: fileMetadata.size,
     });
 
     console.log(
-      `File upload processing initiated for user ${identity.subject}, file: ${args.name}`
+      `File upload processing initiated for user ${identity.tokenIdentifier}, file: ${args.name}`
     );
     return { message: "File processing started." };
   },
@@ -121,7 +121,7 @@ export const getUserFiles = query({
 
     const files = await ctx.db
       .query("files")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
       .order("desc")
       .collect();
 
@@ -140,7 +140,7 @@ export const getUserFiles = query({
 //         }
 //         // Optional: Add authorization check here if needed.
 //         // const fileRecord = await ctx.db.query("files").withIndex("by_storageId", q => q.eq("storageId", args.storageId)).first();
-//         // if (!fileRecord || fileRecord.userId !== identity.subject) {
+//         // if (!fileRecord || fileRecord.userId !== identity.tokenIdentifier) {
 //         //      throw new Error("Not authorized to access this file.");
 //         // }
 //         const url = await ctx.storage.getUrl(args.storageId);
@@ -169,7 +169,7 @@ export const getDownloadUrl = mutation({ // Define as mutation
         }
 
         // 2. Check if the logged-in user owns this file (Authorization)
-        if (fileRecord.userId !== identity.subject) {
+        if (fileRecord.userId !== identity.tokenIdentifier) {
              throw new Error("Not authorized to download this file.");
         }
 
@@ -202,7 +202,7 @@ export const deleteFile = mutation({
             throw new Error("File not found.");
         }
 
-        if (fileRecord.userId !== identity.subject) {
+        if (fileRecord.userId !== identity.tokenIdentifier) {
             throw new Error("User is not authorized to delete this file.");
         }
 
@@ -211,4 +211,18 @@ export const deleteFile = mutation({
 
         return { success: true };
     }
+});
+// Helper query needed in the action (add this to convex/files.ts or keep here)
+// Need an *internal* query if called from an action using runQuery
+
+export const getFileRecordByStorageId = internalQuery({
+     args: { storageId: v.id("_storage") },
+     handler: async (ctx, args) => {
+         // Assuming you have an index `by_storageId` on your files table
+         const fileRecord = await ctx.db
+            .query("files")
+            .withIndex("by_storageId", q => q.eq("storageId", args.storageId))
+            .first(); // Use first() as storageId should be unique
+        return fileRecord;
+     },
 });

@@ -24,6 +24,7 @@ export const create = mutation({
         if (identity === null) {
             throw new Error("Not authenticated");
         }
+        console.log("Creating form ID", identity);
         const newFormId = await ctx.db.insert("forms", {
             createdBy: identity.tokenIdentifier,
             slug: await generateUniqueSlug(ctx),
