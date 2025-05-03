@@ -130,8 +130,6 @@ export const generateQuestions = action({
             throw new Error("Could not retrieve file content from storage.");
         }
         const fileArrayBuffer = await fileBlob.arrayBuffer(); // Get the ArrayBuffer
-
-
         // --- Google API Key Check (Using the standard env var for @ai-sdk/google) ---
         const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
         if (!apiKey) {
@@ -145,13 +143,14 @@ export const generateQuestions = action({
 
         // Define the text part of the prompt
         const textPrompt = `Based *solely* on the content of the provided file (${fileRecord.name}), generate exactly ${args.numberOfQuestions} multiple-choice questions (MCQ).
+Each question should be based on the content of the file and should not be copied directly from the file. The questions should be diverse and challenging, covering a wide range of topics.
+The questions must be a little more complex than the average MCQ, a person must understand the content well to answer them.
 Each question should have:
 1.  A clear "question" text.
 2.  An array named "selectOptions" containing exactly 4 distinct string options.
 3.  A string named "answer" which must exactly match one of the strings in the "selectOptions" array.
 
-Please format the entire output strictly as a single JSON array containing these question objects. Do not include any introductory text, explanations, markdown formatting (like \`\`\`json), or anything else outside the JSON array structure. Example format for one question object: {"question": "...", "selectOptions": ["A", "B", "C", "D"], "answer": "B"}`;
-
+Please format the entire output strictly as a single JSON array containing these question objects. Do not include any introductory text, explanations, markdown formatting, or anything else outside the JSON array structure. Example format for one question object: {"question": "...", "selectOptions": ["A", "B", "C", "D"], "answer": "B"}`;
 
         try {
             // Use generateText following the example structure

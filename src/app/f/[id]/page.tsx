@@ -96,8 +96,8 @@ export default function Page({ params }: { params: { id: string } }) {
       const questionData = questions.find(q => q._id === questionId);
       return {
         questionId: questionId as Id<"form_questions">, // Cast to correct ID type
-        name: questionData?.question ?? "Unknown Question", // Include question text
-        value: selectedValue,
+        question: questionData?.question ?? "Unknown Question", // Include question text
+        userSelectedOption: selectedValue,
       };
     });
 
@@ -124,7 +124,7 @@ export default function Page({ params }: { params: { id: string } }) {
     return <FormSkeleton message="Loading form details..." />;
   }
   if (formDetails === null) {
-    return <div className="text-center text-destructive mt-10">Form not found for slug: {params.id}</div>;
+    return <div className="text-center text-destructive mt-10 px-4">Form not found for slug: {params.id}</div>;
   }
    // Still loading questions after form details are loaded
   if (questions === undefined && formId) {
@@ -133,10 +133,10 @@ export default function Page({ params }: { params: { id: string } }) {
   // Form exists but has no questions
   if (questions && questions.length === 0) {
       return (
-          <div className="container mx-auto p-4 md:p-6 max-w-2xl">
-              <h1 className="text-2xl font-bold mb-2">{formDetails.name || params.id}</h1>
+          <div className="container mx-auto p-3 md:p-8 max-w-2xl bg-white rounded-lg shadow-sm">
+              <h1 className="text-2xl md:text-3xl font-bold mb-3">{formDetails.name || params.id}</h1>
               {formDetails.description && <p className="text-muted-foreground mb-6">{formDetails.description}</p>}
-              <div className="text-center text-muted-foreground mt-10">This form currently has no questions.</div>
+              <div className="text-center text-muted-foreground mt-10 p-6 border border-dashed rounded-md">This form currently has no questions.</div>
           </div>
       );
   }
@@ -149,15 +149,20 @@ export default function Page({ params }: { params: { id: string } }) {
 
   // --- Render Form ---
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-2xl">
+    <div className="container mx-auto p-4 md:p-8 max-w-2xl bg-white rounded-lg shadow-sm">
       {isSubmitted ? (
-        <div className="text-center text-lg text-green-600 font-medium mt-10 border p-6 rounded-md shadow-sm bg-green-50">
-          Your submission was recorded. Thank you ❤️
+        <div className="text-center p-10 rounded-lg shadow-sm border border-green-200 bg-green-50">
+          <div className="text-green-600 text-xl md:text-2xl font-medium mb-3">Thank You!</div>
+          <p className="text-green-700">Your submission has been successfully recorded.</p>
         </div>
       ) : (
         <>
-          <h1 className="text-2xl font-bold mb-2">{formDetails.name || params.id}</h1>
-          {formDetails.description && <p className="text-muted-foreground mb-6">{formDetails.description}</p>}
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold mb-3">{formDetails.name || params.id}</h1>
+            {formDetails.description && (
+              <p className="text-gray-600 md:text-lg">{formDetails.description}</p>
+            )}
+          </div>
 
           {/* Pass the dynamic schema to the resolver */}
           <Form {...form}>
@@ -172,36 +177,46 @@ export default function Page({ params }: { params: { id: string } }) {
                   control={form.control}
                   name={question._id} // Use question ID as the field name in react-hook-form
                   render={({ field }) => (
-                    <FormItem className="space-y-3 p-4 border rounded-md">
-                      <FormLabel className="text-base font-semibold">
+                    <FormItem className="space-y-4 p-3 sm:p-5 border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-gray-50">
+                      <FormLabel className="text-base md:text-lg font-semibold block">
                         {`${index + 1}. ${question.question}`}
                       </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange} // Update RHF state on change
                           defaultValue={field.value} // Set initial value (controlled)
-                          className="flex flex-col space-y-2"
+                          className="flex flex-col space-y-3 pt-2"
                         >
                           {question.selectOptions?.map((option) => (
-                            <FormItem key={`${question._id}-${option}`} className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
+                            <FormItem key={`${question._id}-${option}`} className="flex items-start space-x-2 md:space-x-3 space-y-0">
+                              <FormControl className="mt-1">
                                 <RadioGroupItem value={option} id={`${question._id}-${option}`} />
                               </FormControl>
-                              <Label htmlFor={`${question._id}-${option}`} className="font-normal cursor-pointer">
+                              <Label 
+                                htmlFor={`${question._id}-${option}`} 
+                                className="font-normal cursor-pointer text-sm sm:text-base break-words hyphens-auto"
+                                style={{ wordWrap: 'break-word', maxWidth: 'calc(100% - 30px)' }}
+                              >
                                 {option}
                               </Label>
                             </FormItem>
                           ))}
                         </RadioGroup>
                       </FormControl>
-                      <FormMessage /> {/* Display validation error for this question */}
+                      <FormMessage className="text-red-500" /> {/* Display validation error for this question */}
                     </FormItem>
                   )}
                 />
               ))}
-              <Button type="submit" disabled={isSubmitting || !form.formState.isValid}>
-                 {isSubmitting ? "Submitting..." : "Submit Answers"}
-              </Button>
+              <div className="pt-4 pb-8">
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || !form.formState.isValid}
+                  className="w-full md:w-auto px-8 py-2 text-base font-medium rounded-md"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Answers"}
+                </Button>
+              </div>
             </form>
           </Form>
         </>
@@ -214,22 +229,24 @@ export default function Page({ params }: { params: { id: string } }) {
 // --- Helper Loading Skeleton Component ---
 function FormSkeleton({ title, description, message = "Loading...", count = 3 }: { title?: string | null, description?: string | null, message?: string, count?: number }) {
     return (
-        <div className="container mx-auto p-4 md:p-6 max-w-2xl animate-pulse">
-            {title ? <h1 className="text-2xl font-bold mb-2">{title}</h1> : <Skeleton className="h-8 w-3/4 mb-2" />}
-            {description ? <p className="text-muted-foreground mb-6">{description}</p> : <Skeleton className="h-4 w-full mb-6" />}
-            <div className='text-center my-4 font-medium text-muted-foreground'>{message}</div>
+        <div className="container mx-auto p-4 md:p-8 max-w-2xl bg-white rounded-lg shadow-sm animate-pulse">
+            {title ? <h1 className="text-2xl md:text-3xl font-bold mb-3">{title}</h1> : <Skeleton className="h-8 w-3/4 mb-3" />}
+            {description ? <p className="text-muted-foreground mb-6">{description}</p> : <Skeleton className="h-5 w-full mb-6" />}
+            <div className='text-center my-6 font-medium text-muted-foreground'>{message}</div>
             <div className="space-y-8">
                 {[...Array(count)].map((_, i) => (
-                    <div key={i} className="space-y-3 p-4 border rounded-md">
+                    <div key={i} className="space-y-4 p-3 sm:p-5 border rounded-lg bg-gray-50">
                         <Skeleton className="h-6 w-5/6" /> {/* Question Label */}
-                        <div className="flex flex-col space-y-2">
-                            <Skeleton className="h-5 w-1/2" /> {/* Option 1 */}
-                            <Skeleton className="h-5 w-1/2" /> {/* Option 2 */}
-                            <Skeleton className="h-5 w-1/2" /> {/* Option 3 */}
+                        <div className="flex flex-col space-y-3 pt-2">
+                            <Skeleton className="h-5 w-2/3" /> {/* Option 1 */}
+                            <Skeleton className="h-5 w-2/3" /> {/* Option 2 */}
+                            <Skeleton className="h-5 w-2/3" /> {/* Option 3 */}
                         </div>
                     </div>
                 ))}
-                <Skeleton className="h-10 w-28" /> {/* Submit Button */}
+                <div className="pt-4 pb-8">
+                    <Skeleton className="h-10 w-full md:w-32" /> {/* Submit Button */}
+                </div>
             </div>
         </div>
     );

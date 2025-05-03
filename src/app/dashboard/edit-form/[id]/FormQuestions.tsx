@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api'; // Adjust path as needed
-import { Id } from "../../../../convex/_generated/dataModel"; // Adjust path as needed
+import { api } from '../../../../../convex/_generated/api'; // Adjust path as needed
+import { Id } from "../../../../../convex/_generated/dataModel"; // Adjust path as needed
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

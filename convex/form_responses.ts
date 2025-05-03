@@ -1,4 +1,4 @@
-import { mutation, query } from './_generated/server';
+import { mutation, query,internalQuery } from './_generated/server';
 import { v } from "convex/values";
 
 export const addResponse = mutation({
@@ -6,8 +6,8 @@ export const addResponse = mutation({
         slug: v.string(),
         values: v.array(v.object({
             questionId:v.id("form_questions"),
-            name: v.string(),
-            value: v.string(),
+            question: v.string(),
+            userSelectedOption: v.string(),
         })),
     },
     handler: async (ctx, args) => {
@@ -22,7 +22,7 @@ export const addResponse = mutation({
         const responseId = await ctx.db.insert("form_responses", response);
         return responseId;
     },
-});
+}); 
 
 export const getFormResponses = query({
     args: {
@@ -49,3 +49,14 @@ export const getFormResponses = query({
             .collect();
     },
 })
+// In convex/form_responses.ts:
+ export const getFormResponsesInternal = internalQuery({
+     args: { formId: v.id("forms") },
+     handler: async (ctx, args) => {
+         // No auth check here, action can handle it or assumes internal calls are trusted
+         return ctx.db
+             .query("form_responses")
+             .withIndex("by_formId", q => q.eq("formId", args.formId))
+             .collect();
+     },
+ });

@@ -1,5 +1,5 @@
 import { ConvexError, v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { mutation, query,internalQuery } from './_generated/server';
 import { AnyDataModel, GenericMutationCtx } from 'convex/server';
 const generateUniqueSlug = async (ctx: GenericMutationCtx<AnyDataModel>) => {
     let tries = 0;
@@ -164,3 +164,11 @@ export const getUserForms = query({
             .collect();
     },
 });
+// In convex/forms.ts:
+ export const getFormForOwner = internalQuery({
+     args: { formId: v.id("forms") },
+     handler: async (ctx, args) => {
+         // No auth check here, the action performs it after getting the result
+         return await ctx.db.get(args.formId);
+     },
+ });

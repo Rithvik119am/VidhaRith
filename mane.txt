@@ -1,0 +1,518 @@
+'Constructed prompt for LLM:' '          You are an expert educational analyst. Analyze the following form responses based on the provided questions.            **Input Data:**            1.  **Questions:** An array of question objects. Each object contains:               *   `questionId`: The unique ID of the question.
+              *   `questionText`: The text of the question.
+              *   `options`: An array of possible answer choices (for MCQ).
+              *   `correctAnswer`: The correct answer string.
+              *   `order`: The order of the question in the form.
+              *   `type`: The type of question (currently 'mcq').
+
+          2.  **Responses:** An array of response objects submitted by users. Each object contains:
+              *   `responseId`: The unique ID of the response submission.
+              *   `submittedAnswers`: An array detailing the answers given in that submission. Each item includes:
+                  *   `questionId`: The ID of the question being answered.
+                  *   `questionText`: The text of the question.
+                  *   `options`: The available options for this question.
+                  *   `correctAnswer`: The correct answer for this question.
+                  *   `userSelectedOption`: The option selected by the user.
+
+          **Task:**
+
+          Analyze the responses to determine individual and collective performance. Calculate correctness based on whether `userSelectedOption` matches `correctAnswer`. Identify areas where users struggled (weak topics/questions) and where they excelled (strong topics/questions). Provide actionable focus areas.
+
+          **Output Format:**
+
+          Return **only** a JSON object matching this exact structure:
+
+          ```json
+          {
+            "individualAnalysis": [
+              {
+                "responseId": "string (use the provided responseId)",
+                "performanceByTopic": {
+                  "correct": "number (count of correctly answered questions)",
+                  "total": "number (total questions answered in this response)",
+                  "percentage": "number (correct / total * 100, rounded to 1 decimal)"
+                },
+                "weakTopics": ["string (list of questionText or inferred topics answered incorrectly)"],
+                "strongTopics": ["string (list of questionText or inferred topics answered correctly)"],
+                "individualFocusAreas": ["string (suggestions based on weak topics for this individual)"]
+              }
+              // ... more individual analysis objects
+            ],
+            "collectiveAnalysis": {
+              "topicPerformanceSummary": {
+                  "correct": "number (total correct answers across all responses)",
+                  "total": "number (total questions answered across all responses)",
+                  "percentage": "number (overall correct percentage, rounded to 1 decimal)"
+                },
+              "collectiveWeaknesses": ["string (list of common questionText or inferred topics answered incorrectly by many)"],
+              "collectiveFocusAreas": ["string (overall suggestions based on collective weaknesses)"]
+            }
+          }
+          ```
+
+          **Data for Analysis:**
+
+          Questions:
+          [
+  {
+    "questionId": "jh748yhywbpc573dj1w0qmrr0d7f5e2d",
+    "questionText": "Which of the following best describes the role of 'Beneficence' in ethical data analytics?",
+    "options": [
+      "Ensuring data processes do not discriminate against any group.",
+      "Maximizing benefits and minimizing harm to individuals and society.",
+      "Maintaining honesty and accuracy throughout the data process.",
+      "Taking responsibility for the outcomes of data-driven decisions."
+    ],
+    "correctAnswer": "Maximizing benefits and minimizing harm to individuals and society.",
+    "order": 1,
+    "type": "mcq"
+  },
+  {
+    "questionId": "jh706zyzpnpdm9afgydpm8p6sh7f4cq6",
+    "questionText": "What is the primary purpose of algorithmic auditing in data analytics?",
+    "options": [
+      "To ensure algorithms are cost-effective and efficient.",
+      "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+      "To document data sources and methodologies used in algorithm development.",
+      "To train data analysts on how to build complex algorithms."
+    ],
+    "correctAnswer": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+    "order": 2,
+    "type": "mcq"
+  },
+  {
+    "questionId": "jh772ekggde56n67jmx9vhgshn7f4rjy",
+    "questionText": "Which of the following actions would best exemplify a data professional advocating for ethical standards within their organization?",
+    "options": [
+      "Prioritizing the use of open-source tools to reduce costs.",
+      "Speaking out against deploying biased models and recommending stakeholder consultations.",
+      "Focusing solely on data quality and integrity to ensure accurate results.",
+      "Ensuring all data is anonymized before analysis to protect privacy."
+    ],
+    "correctAnswer": "Speaking out against deploying biased models and recommending stakeholder consultations.",
+    "order": 3,
+    "type": "mcq"
+  },
+  {
+    "questionId": "jh752wvjqvt7m7ad75ethbnwz97f546z",
+    "questionText": "How does 'transparency' contribute to ethical data analytics?",
+    "options": [
+      "By ensuring data is collected anonymously to protect privacy.",
+      "By being open and clear about data collection, processing, analysis, and usage.",
+      "By limiting access to data to only authorized personnel.",
+      "By using complex algorithms that are difficult to understand."
+    ],
+    "correctAnswer": "By being open and clear about data collection, processing, analysis, and usage.",
+    "order": 4,
+    "type": "mcq"
+  },
+  {
+    "questionId": "jh79gcj7s635hjwj2vg70h6kzs7f5cpk",
+    "questionText": "What is the significance of 'data minimization' in the data collection phase of an ethical data analytics project?",
+    "options": [
+      "It ensures that only the most relevant data is collected, reducing storage costs.",
+      "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+      "It prioritizes the collection of diverse datasets to avoid bias.",
+      "It focuses on collecting data from reliable sources to ensure data quality."
+    ],
+    "correctAnswer": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+    "order": 5,
+    "type": "mcq"
+  }
+]
+
+          Responses:
+          [
+  {
+    "responseId": "j574z3jpcpd29hrs5sbz0j2kbd7f5g56",
+    "submittedAnswers": [
+      {
+        "questionId": "jh748yhywbpc573dj1w0qmrr0d7f5e2d",
+        "questionText": "Which of the following best describes the role of 'Beneficence' in ethical data analytics?",
+        "options": [
+          "Ensuring data processes do not discriminate against any group.",
+          "Maximizing benefits and minimizing harm to individuals and society.",
+          "Maintaining honesty and accuracy throughout the data process.",
+          "Taking responsibility for the outcomes of data-driven decisions."
+        ],
+        "correctAnswer": "Maximizing benefits and minimizing harm to individuals and society.",
+        "userSelectedOption": ""
+      },
+      {
+        "questionId": "jh706zyzpnpdm9afgydpm8p6sh7f4cq6",
+        "questionText": "What is the primary purpose of algorithmic auditing in data analytics?",
+        "options": [
+          "To ensure algorithms are cost-effective and efficient.",
+          "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+          "To document data sources and methodologies used in algorithm development.",
+          "To train data analysts on how to build complex algorithms."
+        ],
+        "correctAnswer": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+        "userSelectedOption": ""
+      },
+      {
+        "questionId": "jh772ekggde56n67jmx9vhgshn7f4rjy",
+        "questionText": "Which of the following actions would best exemplify a data professional advocating for ethical standards within their organization?",
+        "options": [
+          "Prioritizing the use of open-source tools to reduce costs.",
+          "Speaking out against deploying biased models and recommending stakeholder consultations.",
+          "Focusing solely on data quality and integrity to ensure accurate results.",
+          "Ensuring all data is anonymized before analysis to protect privacy."
+        ],
+        "correctAnswer": "Speaking out against deploying biased models and recommending stakeholder consultations.",
+        "userSelectedOption": ""
+      },
+      {
+        "questionId": "jh752wvjqvt7m7ad75ethbnwz97f546z",
+        "questionText": "How does 'transparency' contribute to ethical data analytics?",
+        "options": [
+          "By ensuring data is collected anonymously to protect privacy.",
+          "By being open and clear about data collection, processing, analysis, and usage.",
+          "By limiting access to data to only authorized personnel.",
+          "By using complex algorithms that are difficult to understand."
+        ],
+        "correctAnswer": "By being open and clear about data collection, processing, analysis, and usage.",
+        "userSelectedOption": ""
+      },
+      {
+        "questionId": "jh79gcj7s635hjwj2vg70h6kzs7f5cpk",
+        "questionText": "What is the significance of 'data minimization' in the data collection phase of an ethical data analytics project?",
+        "options": [
+          "It ensures that only the most relevant data is collected, reducing storage costs.",
+          "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+          "It prioritizes the collection of diverse datasets to avoid bias.",
+          "It focuses on collecting data from reliable sources to ensure data quality."
+        ],
+        "correctAnswer": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+        "userSelectedOption": "It ensures that only the most relevant data is collected, reducing storage costs."
+      }
+    ]
+  },
+  {
+    "responseId": "j5754ejqycyfrg9z3tbtk0s83x7f7nm6",
+    "submittedAnswers": [
+      {
+        "questionId": "jh748yhywbpc573dj1w0qmrr0d7f5e2d",
+        "questionText": "Which of the following best describes the role of 'Beneficence' in ethical data analytics?",
+        "options": [
+          "Ensuring data processes do not discriminate against any group.",
+          "Maximizing benefits and minimizing harm to individuals and society.",
+          "Maintaining honesty and accuracy throughout the data process.",
+          "Taking responsibility for the outcomes of data-driven decisions."
+        ],
+        "correctAnswer": "Maximizing benefits and minimizing harm to individuals and society.",
+        "userSelectedOption": "Maximizing benefits and minimizing harm to individuals and society."
+      },
+      {
+        "questionId": "jh706zyzpnpdm9afgydpm8p6sh7f4cq6",
+        "questionText": "What is the primary purpose of algorithmic auditing in data analytics?",
+        "options": [
+          "To ensure algorithms are cost-effective and efficient.",
+          "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+          "To document data sources and methodologies used in algorithm development.",
+          "To train data analysts on how to build complex algorithms."
+        ],
+        "correctAnswer": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+        "userSelectedOption": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias."
+      },
+      {
+        "questionId": "jh772ekggde56n67jmx9vhgshn7f4rjy",
+        "questionText": "Which of the following actions would best exemplify a data professional advocating for ethical standards within their organization?",
+        "options": [
+          "Prioritizing the use of open-source tools to reduce costs.",
+          "Speaking out against deploying biased models and recommending stakeholder consultations.",
+          "Focusing solely on data quality and integrity to ensure accurate results.",
+          "Ensuring all data is anonymized before analysis to protect privacy."
+        ],
+        "correctAnswer": "Speaking out against deploying biased models and recommending stakeholder consultations.",
+        "userSelectedOption": "Speaking out against deploying biased models and recommending stakeholder consultations."
+      },
+      {
+        "questionId": "jh752wvjqvt7m7ad75ethbnwz97f546z",
+        "questionText": "How does 'transparency' contribute to ethical data analytics?",
+        "options": [
+          "By ensuring data is collected anonymously to protect privacy.",
+          "By being open and clear about data collection, processing, analysis, and usage.",
+          "By limiting access to data to only authorized personnel.",
+          "By using complex algorithms that are difficult to understand."
+        ],
+        "correctAnswer": "By being open and clear about data collection, processing, analysis, and usage.",
+        "userSelectedOption": "By being open and clear about data collection, processing, analysis, and usage."
+      },
+      {
+        "questionId": "jh79gcj7s635hjwj2vg70h6kzs7f5cpk",
+        "questionText": "What is the significance of 'data minimization' in the data collection phase of an ethical data analytics project?",
+        "options": [
+          "It ensures that only the most relevant data is collected, reducing storage costs.",
+          "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+          "It prioritizes the collection of diverse datasets to avoid bias.",
+          "It focuses on collecting data from reliable sources to ensure data quality."
+        ],
+        "correctAnswer": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+        "userSelectedOption": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks."
+      }
+    ]
+  },
+  {
+    "responseId": "j57d3s2yz4zs1xbgwe4dtjvmkh7f60z3",
+    "submittedAnswers": [
+      {
+        "questionId": "jh748yhywbpc573dj1w0qmrr0d7f5e2d",
+        "questionText": "Which of the following best describes the role of 'Beneficence' in ethical data analytics?",
+        "options": [
+          "Ensuring data processes do not discriminate against any group.",
+          "Maximizing benefits and minimizing harm to individuals and society.",
+          "Maintaining honesty and accuracy throughout the data process.",
+          "Taking responsibility for the outcomes of data-driven decisions."
+        ],
+        "correctAnswer": "Maximizing benefits and minimizing harm to individuals and society.",
+        "userSelectedOption": "Maximizing benefits and minimizing harm to individuals and society."
+      },
+      {
+        "questionId": "jh706zyzpnpdm9afgydpm8p6sh7f4cq6",
+        "questionText": "What is the primary purpose of algorithmic auditing in data analytics?",
+        "options": [
+          "To ensure algorithms are cost-effective and efficient.",
+          "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+          "To document data sources and methodologies used in algorithm development.",
+          "To train data analysts on how to build complex algorithms."
+        ],
+        "correctAnswer": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+        "userSelectedOption": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias."
+      },
+      {
+        "questionId": "jh772ekggde56n67jmx9vhgshn7f4rjy",
+        "questionText": "Which of the following actions would best exemplify a data professional advocating for ethical standards within their organization?",
+        "options": [
+          "Prioritizing the use of open-source tools to reduce costs.",
+          "Speaking out against deploying biased models and recommending stakeholder consultations.",
+          "Focusing solely on data quality and integrity to ensure accurate results.",
+          "Ensuring all data is anonymized before analysis to protect privacy."
+        ],
+        "correctAnswer": "Speaking out against deploying biased models and recommending stakeholder consultations.",
+        "userSelectedOption": "Speaking out against deploying biased models and recommending stakeholder consultations."
+      },
+      {
+        "questionId": "jh752wvjqvt7m7ad75ethbnwz97f546z",
+        "questionText": "How does 'transparency' contribute to ethical data analytics?",
+        "options": [
+          "By ensuring data is collected anonymously to protect privacy.",
+          "By being open and clear about data collection, processing, analysis, and usage.",
+          "By limiting access to data to only authorized personnel.",
+          "By using complex algorithms that are difficult to understand."
+        ],
+        "correctAnswer": "By being open and clear about data collection, processing, analysis, and usage.",
+        "userSelectedOption": "By limiting access to data to only authorized personnel."
+      },
+      {
+        "questionId": "jh79gcj7s635hjwj2vg70h6kzs7f5cpk",
+        "questionText": "What is the significance of 'data minimization' in the data collection phase of an ethical data analytics project?",
+        "options": [
+          "It ensures that only the most relevant data is collected, reducing storage costs.",
+          "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+          "It prioritizes the collection of diverse datasets to avoid bias.",
+          "It focuses on collecting data from reliable sources to ensure data quality."
+        ],
+        "correctAnswer": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+        "userSelectedOption": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks."
+      }
+    ]
+  },
+  {
+    "responseId": "j57dhm7ng52j726vnrsyccgh3d7f6bgt",
+    "submittedAnswers": [
+      {
+        "questionId": "jh748yhywbpc573dj1w0qmrr0d7f5e2d",
+        "questionText": "Which of the following best describes the role of 'Beneficence' in ethical data analytics?",
+        "options": [
+          "Ensuring data processes do not discriminate against any group.",
+          "Maximizing benefits and minimizing harm to individuals and society.",
+          "Maintaining honesty and accuracy throughout the data process.",
+          "Taking responsibility for the outcomes of data-driven decisions."
+        ],
+        "correctAnswer": "Maximizing benefits and minimizing harm to individuals and society.",
+        "userSelectedOption": "Maximizing benefits and minimizing harm to individuals and society."
+      },
+      {
+        "questionId": "jh706zyzpnpdm9afgydpm8p6sh7f4cq6",
+        "questionText": "What is the primary purpose of algorithmic auditing in data analytics?",
+        "options": [
+          "To ensure algorithms are cost-effective and efficient.",
+          "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+          "To document data sources and methodologies used in algorithm development.",
+          "To train data analysts on how to build complex algorithms."
+        ],
+        "correctAnswer": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+        "userSelectedOption": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias."
+      },
+      {
+        "questionId": "jh772ekggde56n67jmx9vhgshn7f4rjy",
+        "questionText": "Which of the following actions would best exemplify a data professional advocating for ethical standards within their organization?",
+        "options": [
+          "Prioritizing the use of open-source tools to reduce costs.",
+          "Speaking out against deploying biased models and recommending stakeholder consultations.",
+          "Focusing solely on data quality and integrity to ensure accurate results.",
+          "Ensuring all data is anonymized before analysis to protect privacy."
+        ],
+        "correctAnswer": "Speaking out against deploying biased models and recommending stakeholder consultations.",
+        "userSelectedOption": "Speaking out against deploying biased models and recommending stakeholder consultations."
+      },
+      {
+        "questionId": "jh752wvjqvt7m7ad75ethbnwz97f546z",
+        "questionText": "How does 'transparency' contribute to ethical data analytics?",
+        "options": [
+          "By ensuring data is collected anonymously to protect privacy.",
+          "By being open and clear about data collection, processing, analysis, and usage.",
+          "By limiting access to data to only authorized personnel.",
+          "By using complex algorithms that are difficult to understand."
+        ],
+        "correctAnswer": "By being open and clear about data collection, processing, analysis, and usage.",
+        "userSelectedOption": "By using complex algorithms that are difficult to understand."
+      },
+      {
+        "questionId": "jh79gcj7s635hjwj2vg70h6kzs7f5cpk",
+        "questionText": "What is the significance of 'data minimization' in the data collection phase of an ethical data analytics project?",
+        "options": [
+          "It ensures that only the most relevant data is collected, reducing storage costs.",
+          "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+          "It prioritizes the collection of diverse datasets to avoid bias.",
+          "It focuses on collecting data from reliable sources to ensure data quality."
+        ],
+        "correctAnswer": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+        "userSelectedOption": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks."
+      }
+    ]
+  },
+  {
+    "responseId": "j576e4c65tjsemtvqjwcq6mpdh7f64ft",
+    "submittedAnswers": [
+      {
+        "questionId": "jh748yhywbpc573dj1w0qmrr0d7f5e2d",
+        "questionText": "Which of the following best describes the role of 'Beneficence' in ethical data analytics?",
+        "options": [
+          "Ensuring data processes do not discriminate against any group.",
+          "Maximizing benefits and minimizing harm to individuals and society.",
+          "Maintaining honesty and accuracy throughout the data process.",
+          "Taking responsibility for the outcomes of data-driven decisions."
+        ],
+        "correctAnswer": "Maximizing benefits and minimizing harm to individuals and society.",
+        "userSelectedOption": "Maximizing benefits and minimizing harm to individuals and society."
+      },
+      {
+        "questionId": "jh706zyzpnpdm9afgydpm8p6sh7f4cq6",
+        "questionText": "What is the primary purpose of algorithmic auditing in data analytics?",
+        "options": [
+          "To ensure algorithms are cost-effective and efficient.",
+          "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+          "To document data sources and methodologies used in algorithm development.",
+          "To train data analysts on how to build complex algorithms."
+        ],
+        "correctAnswer": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+        "userSelectedOption": "To ensure algorithms are cost-effective and efficient."
+      },
+      {
+        "questionId": "jh772ekggde56n67jmx9vhgshn7f4rjy",
+        "questionText": "Which of the following actions would best exemplify a data professional advocating for ethical standards within their organization?",
+        "options": [
+          "Prioritizing the use of open-source tools to reduce costs.",
+          "Speaking out against deploying biased models and recommending stakeholder consultations.",
+          "Focusing solely on data quality and integrity to ensure accurate results.",
+          "Ensuring all data is anonymized before analysis to protect privacy."
+        ],
+        "correctAnswer": "Speaking out against deploying biased models and recommending stakeholder consultations.",
+        "userSelectedOption": "Focusing solely on data quality and integrity to ensure accurate results."
+      },
+      {
+        "questionId": "jh752wvjqvt7m7ad75ethbnwz97f546z",
+        "questionText": "How does 'transparency' contribute to ethical data analytics?",
+        "options": [
+          "By ensuring data is collected anonymously to protect privacy.",
+          "By being open and clear about data collection, processing, analysis, and usage.",
+          "By limiting access to data to only authorized personnel.",
+          "By using complex algorithms that are difficult to understand."
+        ],
+        "correctAnswer": "By being open and clear about data collection, processing, analysis, and usage.",
+        "userSelectedOption": "By using complex algorithms that are difficult to understand."
+      },
+      {
+        "questionId": "jh79gcj7s635hjwj2vg70h6kzs7f5cpk",
+        "questionText": "What is the significance of 'data minimization' in the data collection phase of an ethical data analytics project?",
+        "options": [
+          "It ensures that only the most relevant data is collected, reducing storage costs.",
+          "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+          "It prioritizes the collection of diverse datasets to avoid bias.",
+          "It focuses on collecting data from reliable sources to ensure data quality."
+        ],
+        "correctAnswer": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+        "userSelectedOption": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks."
+      }
+    ]
+  },
+  {
+    "responseId": "j57f42mctfepyawaqjs56z6d597f7c3v",
+    "submittedAnswers": [
+      {
+        "questionId": "jh748yhywbpc573dj1w0qmrr0d7f5e2d",
+        "questionText": "Which of the following best describes the role of 'Beneficence' in ethical data analytics?",
+        "options": [
+          "Ensuring data processes do not discriminate against any group.",
+          "Maximizing benefits and minimizing harm to individuals and society.",
+          "Maintaining honesty and accuracy throughout the data process.",
+          "Taking responsibility for the outcomes of data-driven decisions."
+        ],
+        "correctAnswer": "Maximizing benefits and minimizing harm to individuals and society.",
+        "userSelectedOption": "Maximizing benefits and minimizing harm to individuals and society."
+      },
+      {
+        "questionId": "jh706zyzpnpdm9afgydpm8p6sh7f4cq6",
+        "questionText": "What is the primary purpose of algorithmic auditing in data analytics?",
+        "options": [
+          "To ensure algorithms are cost-effective and efficient.",
+          "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+          "To document data sources and methodologies used in algorithm development.",
+          "To train data analysts on how to build complex algorithms."
+        ],
+        "correctAnswer": "To regularly evaluate algorithms for fairness, accuracy, and lack of bias.",
+        "userSelectedOption": "To document data sources and methodologies used in algorithm development."
+      },
+      {
+        "questionId": "jh772ekggde56n67jmx9vhgshn7f4rjy",
+        "questionText": "Which of the following actions would best exemplify a data professional advocating for ethical standards within their organization?",
+        "options": [
+          "Prioritizing the use of open-source tools to reduce costs.",
+          "Speaking out against deploying biased models and recommending stakeholder consultations.",
+          "Focusing solely on data quality and integrity to ensure accurate results.",
+          "Ensuring all data is anonymized before analysis to protect privacy."
+        ],
+        "correctAnswer": "Speaking out against deploying biased models and recommending stakeholder consultations.",
+        "userSelectedOption": "Ensuring all data is anonymized before analysis to protect privacy."
+      },
+      {
+        "questionId": "jh752wvjqvt7m7ad75ethbnwz97f546z",
+        "questionText": "How does 'transparency' contribute to ethical data analytics?",
+        "options": [
+          "By ensuring data is collected anonymously to protect privacy.",
+          "By being open and clear about data collection, processing, analysis, and usage.",
+          "By limiting access to data to only authorized personnel.",
+          "By using complex algorithms that are difficult to understand."
+        ],
+        "correctAnswer": "By being open and clear about data collection, processing, analysis, and usage.",
+        "userSelectedOption": "By being open and clear about data collection, processing, analysis, and usage."
+      },
+      {
+        "questionId": "jh79gcj7s635hjwj2vg70h6kzs7f5cpk",
+        "questionText": "What is the significance of 'data minimization' in the data collection phase of an ethical data analytics project?",
+        "options": [
+          "It ensures that only the most relevant data is collected, reducing storage costs.",
+          "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+          "It prioritizes the collection of diverse datasets to avoid bias.",
+          "It focuses on collecting data from reliable sources to ensure data quality."
+        ],
+        "correctAnswer": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks.",
+        "userSelectedOption": "It involves collecting only the data necessary for the project's objectives, minimizing privacy risks."
+      }
+    ]
+  }
+]
+
+          Now, generate the JSON analysis.

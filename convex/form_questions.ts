@@ -1,5 +1,5 @@
 // convex/form_questions.ts
-import { mutation, query } from './_generated/server';
+import { mutation, query,internalQuery } from './_generated/server';
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
@@ -123,3 +123,14 @@ export const getFormQuestions = query({
 // unless you query questions directly via a form slug without knowing the formId first.
 // If needed, it would look similar to the one in form_fields.ts, first finding
 // the form by slug, then querying questions by the found form._id.
+// In convex/form_questions.ts:
+ export const getFormQuestionsInternal = internalQuery({
+     args: { formId: v.id("forms") },
+     handler: async (ctx, args) => {
+         return ctx.db
+             .query("form_questions")
+             .withIndex("by_formId", (q) => q.eq("formId", args.formId))
+             .order("asc")
+             .collect();
+     },
+ });
