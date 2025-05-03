@@ -90,7 +90,7 @@ export const generateAnalysis = action({
          if (!form) {
              throw new ConvexError("Form not found or user does not have permission.");
          }
-         if (form.createdBy !== identity.tokenIdentifier) {
+         if (form.createdBy !== identity.subject) {
               throw new ConvexError("User does not have permission to generate analysis for this form.");
          }
 
@@ -305,8 +305,8 @@ export const getAnalysis = query({
             throw new ConvexError("Associated form not found");
         }
         // Uncomment below if only the creator can view the analysis
-         if (form.createdBy !== identity.tokenIdentifier) {
-             console.warn(`User ${identity.tokenIdentifier} attempted to access analysis for form ${args.formId} owned by ${form.createdBy}`);
+         if (form.createdBy !== identity.subject) {
+             console.warn(`User ${identity.subject} attempted to access analysis for form ${args.formId} owned by ${form.createdBy}`);
              // Decide: throw error or return null/empty?
              return null; // Silently deny access
              // OR: throw new ConvexError("User does not have permission to view analysis for this form");
@@ -361,7 +361,7 @@ export const deleteAnalysis = mutation({
          if (!form) {
             console.warn(`Associated form ${formId} not found for analysis record ${analysisRecord._id}. Allowing deletion.`);
              // Decide if deletion should proceed if form is gone. Let's allow it here.
-         } else if (form.createdBy !== identity.tokenIdentifier) {
+         } else if (form.createdBy !== identity.subject) {
              throw new ConvexError("User does not have permission to delete this analysis.");
          }
 

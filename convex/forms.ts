@@ -26,7 +26,7 @@ export const create = mutation({
         }
         console.log("Creating form ID", identity);
         const newFormId = await ctx.db.insert("forms", {
-            createdBy: identity.tokenIdentifier,
+            createdBy: identity.subject,
             slug: await generateUniqueSlug(ctx),
         });
         return newFormId;
@@ -48,7 +48,7 @@ export const update = mutation({
             .query("forms")
             .filter((q) => q.and(
                 q.eq(q.field("_id"), args.formId),
-                q.eq(q.field("createdBy"), identity.tokenIdentifier)
+                q.eq(q.field("createdBy"), identity.subject)
             ))
             .unique();
         if (!form) {
@@ -65,7 +65,7 @@ export const update = mutation({
 
         const formsOfThisUser = await ctx.db
         .query("forms")
-        .filter((q) => q.eq(q.field("createdBy"), identity.tokenIdentifier))
+        .filter((q) => q.eq(q.field("createdBy"), identity.subject))
         .collect();
         const sameNameForms = formsOfThisUser.filter((f) => f.name === args.name.trim());
         
@@ -95,7 +95,7 @@ export const deleteForm = mutation({
             .query("forms")
             .filter((q) => q.and(
                 q.eq(q.field("_id"), args.formId),
-                q.eq(q.field("createdBy"), identity.tokenIdentifier)
+                q.eq(q.field("createdBy"), identity.subject)
             ))
             .unique();
         if (!form) {
@@ -160,7 +160,7 @@ export const getUserForms = query({
         }
         return ctx.db
             .query("forms")
-            .filter((q) => q.eq(q.field("createdBy"), identity.tokenIdentifier))
+            .filter((q) => q.eq(q.field("createdBy"), identity.subject))
             .collect();
     },
 });

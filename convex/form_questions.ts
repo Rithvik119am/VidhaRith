@@ -25,7 +25,7 @@ export const addQuestion = mutation({
         if (!form) {
             throw new Error("Form not found");
         }
-        if (form.createdBy !== identity.tokenIdentifier) {
+        if (form.createdBy !== identity.subject) {
             // You might want to allow collaborators later, but for now, check ownership
              throw new Error("User does not have permission to add questions to this form");
         }
@@ -79,7 +79,7 @@ export const deleteQuestion = mutation({
              // Should not happen if question exists, but good practice
             throw new Error("Associated form not found");
         }
-        if (form.createdBy !== identity.tokenIdentifier) {
+        if (form.createdBy !== identity.subject) {
             throw new Error("User does not have permission to delete questions from this form");
         }
 

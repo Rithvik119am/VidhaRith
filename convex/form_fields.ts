@@ -18,7 +18,7 @@ export const addField = mutation({
             .query("forms")
             .filter((q) => q.eq(q.field("_id"), args.formId))
             .unique();
-        if (!form || form.createdBy !== identity.tokenIdentifier) {
+        if (!form || form.createdBy !== identity.subject) {
             throw new Error("Form not found");
         }
         const newFormId = await ctx.db.insert("form_fields", args);
@@ -46,7 +46,7 @@ export const deleteField = mutation({
             .query("forms")
             .filter((q) => q.eq(q.field("_id"), field.formId))
             .unique();
-        if (!form || form.createdBy !== identity.tokenIdentifier) {
+        if (!form || form.createdBy !== identity.subject) {
             throw new Error("Form not found");
         }
         

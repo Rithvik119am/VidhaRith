@@ -37,7 +37,7 @@ export const getFormResponses = query({
             .query("forms")
             .filter((q) => q.and(
                 q.eq(q.field("_id"), args.formId),
-                q.eq(q.field("createdBy"), identity.tokenIdentifier)
+                q.eq(q.field("createdBy"), identity.subject)
             ))
             .unique();
         if (!form) {

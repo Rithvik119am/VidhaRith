@@ -105,7 +105,7 @@ export const generateQuestions = action({
         if (!fileRecord) {
              throw new Error("File not found.");
         }
-        if (fileRecord.userId !== identity.tokenIdentifier) {
+        if (fileRecord.userId !== identity.subject) {
              throw new Error("User is not authorized to use this file.");
         }
 
@@ -218,7 +218,7 @@ Please format the entire output strictly as a single JSON array containing these
             await ctx.runMutation(internal.aiQuestions.internal_addGeneratedQuestions, {
                 formId: args.formId,
                 generatedQuestions: generatedQuestions, // Pass parsed questions for validation in mutation
-                userId: identity.tokenIdentifier,
+                userId: identity.subject,
             });
 
             console.log(`Successfully scheduled adding questions for form ${args.formId}. Validation will occur before saving.`);

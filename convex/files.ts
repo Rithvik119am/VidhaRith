@@ -98,13 +98,13 @@ export const sendFile = mutation({
       storageId: args.storageId,
       name: args.name,
       type: args.type,
-      userId: identity.tokenIdentifier,
+      userId: identity.subject,
       // Optional: Pass size if you added it to internal_createFileRecord args/schema
       // size: fileMetadata.size,
     });
 
     console.log(
-      `File upload processing initiated for user ${identity.tokenIdentifier}, file: ${args.name}`
+      `File upload processing initiated for user ${identity.subject}, file: ${args.name}`
     );
     return { message: "File processing started." };
   },
@@ -121,7 +121,7 @@ export const getUserFiles = query({
 
     const files = await ctx.db
       .query("files")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .order("desc")
       .collect();
 
@@ -140,7 +140,7 @@ export const getUserFiles = query({
 //         }
 //         // Optional: Add authorization check here if needed.
 //         // const fileRecord = await ctx.db.query("files").withIndex("by_storageId", q => q.eq("storageId", args.storageId)).first();
-//         // if (!fileRecord || fileRecord.userId !== identity.tokenIdentifier) {
+//         // if (!fileRecord || fileRecord.userId !== identity.subject) {
 //         //      throw new Error("Not authorized to access this file.");
 //         // }
 //         const url = await ctx.storage.getUrl(args.storageId);
@@ -169,7 +169,7 @@ export const getDownloadUrl = mutation({ // Define as mutation
         }
 
         // 2. Check if the logged-in user owns this file (Authorization)
-        if (fileRecord.userId !== identity.tokenIdentifier) {
+        if (fileRecord.userId !== identity.subject) {
              throw new Error("Not authorized to download this file.");
         }
 
@@ -202,7 +202,7 @@ export const deleteFile = mutation({
             throw new Error("File not found.");
         }
 
-        if (fileRecord.userId !== identity.tokenIdentifier) {
+        if (fileRecord.userId !== identity.subject) {
             throw new Error("User is not authorized to delete this file.");
         }
 
