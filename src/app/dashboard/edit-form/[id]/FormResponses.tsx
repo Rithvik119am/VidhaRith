@@ -8,7 +8,8 @@ import { Id } from "../../../../../convex/_generated/dataModel"; // Adjust path 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, CheckCircle2, XCircle } from "lucide-react"; // Icons
+import { AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Define a type for the processed response data
 type ProcessedResponse = {
@@ -122,10 +123,40 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
 
     }, [responses, questions, formId]); // Dependencies remain the same
 
+    // Format score distribution data for the chart
+    const scoreDistributionData = useMemo(() => {
+        if (!analysisData?.scoreCounts) return [];
+        
+        const totalQuestions = analysisData.processedResponses[0]?.totalQuestions || 0;
+        const data = [];
+        
+        // Create an entry for each possible score (0 to totalQuestions)
+        for (let i = 0; i <= totalQuestions; i++) {
+            data.push({
+                score: i,
+                count: analysisData.scoreCounts[i] || 0,
+                label: `${i}/${totalQuestions}`
+            });
+        }
+        
+        return data;
+    }, [analysisData]);
+
+    // Format question performance data for the visualization
+    const questionPerformanceData = useMemo(() => {
+        if (!analysisData?.questionStats) return [];
+        
+        return Object.entries(analysisData.questionStats).map(([qId, stats]) => ({
+            id: qId,
+            text: stats.text,
+            correctPercentage: (stats.correctResponses / stats.totalResponses) * 100,
+            correctCount: stats.correctResponses,
+            totalCount: stats.totalResponses,
+        }));
+    }, [analysisData]);
 
     // Access the data outside the useMemo
     const processedResponses = analysisData?.processedResponses;
-    const scoreCounts = analysisData?.scoreCounts;
     const questionStats = analysisData?.questionStats;
 
     // --- Loading State ---
@@ -159,21 +190,32 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
         <div className="space-y-6 mt-4">
             <h2 className="text-xl font-semibold">Responses ({processedResponses.length})</h2>
 
-            {scoreCounts && Object.keys(scoreCounts).length > 0 && (
+            {scoreDistributionData.length > 0 && (
                 <Card className="w-full mb-6 shadow-sm">
                     <CardHeader>
                         <CardTitle>Score Distribution</CardTitle>
                         <CardDescription>Number of students achieving each score.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {/* Render your Chart Component for Score Distribution here */}
-                        {/* Example placeholder: */}
-                        <div className="h-48 bg-gray-100 flex items-center justify-center rounded-md">
-                            {/* Your Score Distribution Chart Component */}
-                            <p>Score Distribution Chart Goes Here</p>
+                        <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={scoreDistributionData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="label" />
+                                    <YAxis allowDecimals={false} />
+                                    <Tooltip 
+                                        formatter={(value) => [`${value} students`, 'Count']}
+                                        labelFormatter={(label) => `Score: ${label}`}
+                                    />
+                                    <Bar 
+                                        dataKey="count" 
+                                        name="Students" 
+                                        fill="#4f46e5" 
+                                        radius={[4, 4, 0, 0]} 
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
-                        {/* You would pass scoreCounts data to your chart component */}
-                        {/* <BarChart data={...} /> or similar */}
                     </CardContent>
                 </Card>
             )}
@@ -182,21 +224,33 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                 <Card className="w-full mb-6 shadow-sm">
                     <CardHeader>
                         <CardTitle>Question Performance</CardTitle>
-                        <CardDescription>Number of correct answers per question.</CardDescription>
+                        <CardDescription>Percentage of correct answers per question.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {/* Render your Chart Component(s) for Question Correctness here */}
-                        {/* Example placeholder: */}
                         <div className="space-y-4">
-                            {Object.entries(questionStats).map(([qId, stats]) => (
-                                <div key={qId} className="border p-3 rounded-md">
-                                    <p className="font-medium text-sm mb-2">{stats.text}</p>
-                                    {/* Your Question Correctness Chart/Visualization (e.g., a small bar indicating correct vs total) */}
-                                    <div className="h-8 bg-gray-100 flex items-center justify-center rounded-md">
-                                        <p className="text-sm">{stats.correctResponses} / {stats.totalResponses} correct</p>
+                            {questionPerformanceData.map((question) => (
+                                <div key={question.id} className="border p-3 rounded-md">
+                                    <p className="font-medium text-sm mb-2">{question.text}</p>
+                                    <div className="relative h-8 bg-gray-100 rounded-md overflow-hidden">
+                                        <div 
+                                            className={`absolute top-0 left-0 h-full flex items-center px-2 ${
+                                                question.correctPercentage >= 70 ? 'bg-green-500' :
+                                                question.correctPercentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                            }`}
+                                            style={{ width: `${question.correctPercentage}%` }}
+                                        >
+                                            {question.correctPercentage >= 25 && (
+                                                <span className="text-xs font-medium text-white">
+                                                    {question.correctCount} correct
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <p className="text-sm font-medium">
+                                                {question.correctCount} / {question.totalCount} correct ({Math.round(question.correctPercentage)}%)
+                                            </p>
+                                        </div>
                                     </div>
-                                    {/* You would pass stats data to a chart component */}
-                                    {/* <PieChart data={...} /> or <BarChart data={...} /> */}
                                 </div>
                             ))}
                         </div>
@@ -205,12 +259,11 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
             )}
 
             {processedResponses.map((procResponse) => (
-
                 <Card key={procResponse._id} className="w-full overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                     <CardHeader className="bg-muted/30 px-4 py-3 border-b">
                         <div className="flex justify-between items-center gap-4 flex-wrap"> {/* Allow wrapping */}
                             <CardTitle className="text-lg">
-                                Submitted: {new Date(procResponse._creationTime).toISOString()} {/* Use date-fns */}
+                                Submitted: {new Date(procResponse._creationTime).toLocaleDateString()} {new Date(procResponse._creationTime).toLocaleTimeString()}
                             </CardTitle>
                             {/* Only show score badge if there are questions */}
                             {procResponse.totalQuestions > 0 ? (
@@ -270,4 +323,4 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
             ))}
         </div>
     );
-}
+} 

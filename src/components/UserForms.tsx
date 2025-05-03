@@ -1,17 +1,15 @@
 // --- START OF FILE UserForms.tsx ---
 "use client";
 
-// Remove 'use' hook from React import as it's experimental and not needed here
-import React, { useState } from 'react'; // Import useState
+import React, { useState } from 'react';
 import { Authenticated, Unauthenticated, useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from '../../convex/_generated/dataModel';
 
-// shadcn/ui components
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+// shadcn/ui components - Removed Table components
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Added Card
-import { Skeleton } from '@/components/ui/skeleton'; // Added Skeleton
+import { Card, CardContent } from '@/components/ui/card'; // Keep Card, CardContent
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -22,7 +20,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"; // Added AlertDialog
+} from "@/components/ui/alert-dialog";
 
 // Icons
 import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
@@ -33,18 +31,24 @@ import { useRouter } from 'next/navigation';
 // Toast notification
 import { toast } from "sonner";
 
+// Need line-clamp for description truncation in list view
+// Make sure you have the @tailwindcss/line-clamp plugin installed and configured
+// Or use a different method for truncation if not using Tailwind CSS
+// import '@/styles/globals.css'; // Assuming line-clamp is part of your global styles
+
 
 export default function UserForms() {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   const createForm = useMutation(api.forms.create);
-  const deleteForm = useMutation(api.forms.deleteForm); // This is the function you call
+  const deleteForm = useMutation(api.forms.deleteForm);
 
   const forms = useQuery(api.forms.getUserForms, {});
 
   const [isCreating, setIsCreating] = useState(false);
-  const [deletingFormId, setDeletingFormId] = useState<Id<"forms"> | null>(null); // Track which form ID is pending deletion confirmation
-  const [isDeleting, setIsDeleting] = useState(false); // <-- New state to track if deletion mutation is in progress
+  // Use null for no deletion pending, or the ID of the form to delete
+  const [deletingFormId, setDeletingFormId] = useState<Id<"forms"> | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
   const handleCreateClick = async () => {
@@ -52,9 +56,7 @@ export default function UserForms() {
     try {
         const newFormId = await createForm({});
         toast.success("New form created!");
-        // Redirect to form page using router.push
-        router.push(`/edit-form/${newFormId}`);
-        // No need to setIsCreating(false) here as the component will likely unmount or navigate
+        router.push(`edit-form/${newFormId}`);
     } catch (e: any) {
         console.error("Failed to create form:", e);
         toast.error(`Failed to create form: ${e.data || e.message || e.toString()}`);
@@ -62,35 +64,30 @@ export default function UserForms() {
     }
   };
 
-  const handleDeleteClick = (formId: Id<"forms">) => {
-    // This function is called when the AlertDialogTrigger button is clicked.
-    // It sets the formId that the dialog is currently asking about.
-    setDeletingFormId(formId);
-    // The dialog's open state is managed implicitly by `deletingFormId !== null`
-    // or explicitly if you were using a separate boolean state for the dialog.
-    // Using the ID directly works with the AlertDialogTrigger/Content setup.
-  };
+  // This function is called when the AlertDialogTrigger button for a specific form is clicked.
+  const handleTriggerDeleteClick = (formId: Id<"forms">) => {
+     // Setting this state opens the AlertDialog because we bind the AlertDialog's 'open' prop to this state.
+     setDeletingFormId(formId);
+  }
+
 
   const confirmDelete = async () => {
       if (!deletingFormId) {
-          // This shouldn't happen if the button is only clickable when dialog is open,
-          // but it's a good safeguard.
-          return;
+          return; // Should not happen if the button is disabled when not deleting
       }
 
-      setIsDeleting(true); // <-- Set loading state to true BEFORE calling the mutation
+      setIsDeleting(true);
 
       try {
-          // Call the delete mutation function
           await deleteForm({ formId: deletingFormId });
           toast.success("Form deleted successfully!");
-          // Forms list will automatically refetch due to useQuery
       } catch (e: any) {
           console.error("Failed to delete form:", e);
           toast.error(`Failed to delete form: ${e.data || e.message || e.toString()}`);
       } finally {
-          setDeletingFormId(null); // Reset deleting state (closes dialog)
-          setIsDeleting(false); // <-- Set loading state back to false
+          // Close the dialog and reset state regardless of success/failure
+          setDeletingFormId(null);
+          setIsDeleting(false);
       }
   };
 
@@ -102,10 +99,20 @@ export default function UserForms() {
         return (
              <div className="container mx-auto py-8 space-y-6">
                 <h2 className="text-2xl font-bold">Your Forms</h2>
-                 <div className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
+                 <div className="space-y-4"> {/* Space between skeleton items */}
+                    {/* Card-like skeletons */}
+                     <div className="border rounded-md p-4 space-y-2">
+                        <Skeleton className="h-6 w-3/4" /> {/* Skeleton for name */}
+                        <Skeleton className="h-4 w-full" /> {/* Skeleton for description */}
+                     </div>
+                     <div className="border rounded-md p-4 space-y-2">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                     </div>
+                      <div className="border rounded-md p-4 space-y-2">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                     </div>
                  </div>
                  <Skeleton className="h-10 w-32 mt-4" /> {/* Skeleton for New button */}
             </div>
@@ -113,12 +120,13 @@ export default function UserForms() {
     }
 
     return (
-        <div className="container mx-auto py-8 space-y-6"> {/* Add container padding and spacing */}
+        <div className="container mx-auto py-8 space-y-6">
             <Unauthenticated>
                 <div className="text-center text-lg text-muted-foreground">Please sign in to view and manage your forms.</div>
             </Unauthenticated>
             <Authenticated>
-                <div className="flex justify-between items-center">
+                {/* Header with title and New Form button */}
+                <div className="flex justify-between items-center mb-6"> {/* Added bottom margin for separation */}
                     <h2 className="text-2xl font-bold">Your Forms</h2>
                      <Button onClick={handleCreateClick} disabled={isCreating}>
                          {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
@@ -128,80 +136,80 @@ export default function UserForms() {
 
 
                 {forms && forms.length > 0 ? (
-                    // Wrap table in Card for better presentation
-                    <Card>
-                        <CardContent className="p-0"> {/* Remove padding if table is full width */}
-                            <div className="rounded-md border overflow-hidden"> {/* Ensure rounded corners/border on the table */}
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead className="max-w-[300px] truncate">Description</TableHead> {/* Add truncate */}
-                                            <TableHead className="w-[80px] text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                    {forms.map((form) => (
-                                        <TableRow key={form._id}>
-                                            {/* Link on the name */}
-                                            <TableCell className="font-medium">
-                                                <a href={`/edit-form/${form._id}`} className="hover:underline text-primary">
-                                                    {form.name || `Form ${form._id.slice(-4)}`} {/* Use name or fallback */}
-                                                </a>
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">
+                    // Use a div with space-y to list forms as cards
+                    <div className="space-y-4">
+                        {forms.map((form) => (
+                            // Each form is a Card
+                            <Card key={form._id}>
+                                <CardContent className="p-4"> {/* Add padding inside the card */}
+                                    {/* Flex container to hold form info and delete button */}
+                                    <div className="flex justify-between items-center">
+                                        {/* Left side: Form Name (as link) and Description */}
+                                        {/* flex-1 allows this section to grow and take available space */}
+                                        <div className="flex-1 pr-4"> {/* Add right padding to separate from button */}
+                                            {/* Form Name as a clickable link */}
+                                            <a href={`edit-form/${form._id}`} className="block text-lg font-semibold text-primary hover:underline mb-1">
+                                                {form.name || `Form ${form._id.slice(-4)}`}
+                                            </a>
+                                            {/* Description - truncated to 2 lines */}
+                                             {/* Requires @tailwindcss/line-clamp plugin */}
+                                            <p className="text-muted-foreground text-sm line-clamp-2">
                                                 {form.description || '-'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                 {/* Delete Button within AlertDialog Trigger */}
-                                                <AlertDialog open={deletingFormId === form._id} onOpenChange={(isOpen) => !isOpen && setDeletingFormId(null)}>
-                                                    <AlertDialogTrigger asChild>
-                                                         {/* Use a button with icon */}
-                                                         <Button
-                                                             variant="ghost"
-                                                             size="icon"
-                                                             aria-label={`Delete form "${form.name || `Form ${form._id.slice(-4)}`}"`} // Add aria-label for accessibility
-                                                              // We don't call setDeletingFormId directly here anymore.
-                                                              // The AlertDialogTrigger automatically handles setting the internal open state.
-                                                              // However, we need the dialog content to know *which* form is being deleted.
-                                                              // The `open` prop on AlertDialog itself handles this association.
-                                                             // We pass the form's ID to AlertDialogContent via state `deletingFormId`.
-                                                         >
-                                                             <Trash2 className="h-4 w-4 text-destructive" />
-                                                         </Button>
-                                                    </AlertDialogTrigger>
-                                                     {/* AlertDialogContent is only rendered when `open={true}` */}
-                                                     {/* It accesses deletingFormId from the state */}
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    This action cannot be undone. This will permanently delete the form
-                                                                    <span className="font-semibold"> "{forms.find(f => f._id === deletingFormId)?.name || `Form ${deletingFormId?.slice(-4) || '...'}`}" </span> {/* Display name in dialog */}
-                                                                    and all associated questions and responses.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel onClick={() => setDeletingFormId(null)} disabled={isDeleting}>Cancel</AlertDialogCancel> {/* Reset state on cancel, disable if deleting */}
-                                                                <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}> {/* Disable button while deleting */}
-                                                                     {isDeleting ? ( // <-- Use the new state variable
-                                                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                                    ) : null}
-                                                                    Delete
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                </AlertDialog>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                            </p>
+                                        </div>
+
+                                        {/* Right side: Actions (Delete Button) */}
+                                        {/* flex-shrink-0 prevents the button area from shrinking */}
+                                        <div className="flex-shrink-0">
+                                            {/* Delete Button wrapped in AlertDialog Trigger */}
+                                            {/* Bind the AlertDialog open state to deletingFormId */}
+                                             <AlertDialog
+                                                open={deletingFormId === form._id}
+                                                 // When the dialog's open state changes (e.g., closed by clicking outside),
+                                                 // if it's closing, reset the deletingFormId.
+                                                onOpenChange={(isOpen) => !isOpen && setDeletingFormId(null)}
+                                             >
+                                                <AlertDialogTrigger asChild>
+                                                     {/* Use an icon button */}
+                                                     <Button
+                                                         variant="ghost"
+                                                         size="icon" // Small square button
+                                                         aria-label={`Delete form "${form.name || `Form ${form._id.slice(-4)}`}"`}
+                                                         onClick={() => handleTriggerDeleteClick(form._id)} // Set the ID when this trigger button is clicked
+                                                     >
+                                                         <Trash2 className="h-4 w-4 text-destructive" />
+                                                     </Button>
+                                                </AlertDialogTrigger>
+                                                {/* AlertDialogContent is conditionally rendered based on the 'open' prop */}
+                                                {/* It automatically has access to the deletingFormId state */}
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This action cannot be undone. This will permanently delete the form
+                                                            <span className="font-semibold"> "{forms.find(f => f._id === deletingFormId)?.name || `Form ${deletingFormId?.slice(-4) || '...'}`}" </span>
+                                                            and all associated questions and responses.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel onClick={() => setDeletingFormId(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
+                                                             {isDeleting ? (
+                                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            ) : null}
+                                                            Delete
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                             </AlertDialog>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
                 ) : (
-                    // Empty state message with better styling
+                    // Empty state message
                     <div className="text-center p-6 border rounded-md bg-muted/20">
                         <p className="text-muted-foreground">You don't have any forms yet. Create your first one!</p>
                     </div>

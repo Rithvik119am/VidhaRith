@@ -35,6 +35,7 @@ export default function RootLayout({
         <Toaster />
         </ConvexClientProvider>
         <footer className="flex justify-center items-center">Made by K. Sai Rithvik Reddy</footer>
+        <div className="flex justify-center items-center p-3">  </div>
         </div>
         </body>
     </html>

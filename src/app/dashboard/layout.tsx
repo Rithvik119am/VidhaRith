@@ -30,8 +30,7 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
       {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
-        <span className="text-lg font-semibold text-gray-800">Dashboard</span>
+      <div className="lg:hidden ">
         <Button
           className="-mr-2"
           variant="ghost"
@@ -40,7 +39,7 @@ export default function DashboardLayout({
           <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle sidebar</span>
         </Button>
-      </div>
+        </div>
 
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
