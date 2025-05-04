@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/google": "^1.2.14",
     "@clerk/clerk-react": "^5.0.3",
+    "@clerk/nextjs": "^6.18.5",
     "@google/genai": "^0.12.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.3.4",

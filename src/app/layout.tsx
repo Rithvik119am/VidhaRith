@@ -26,7 +26,6 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className="flex flex-col min-h-screen">
         <ConvexClientProvider>
-        <Header />
         
         <main className="container flex-grow mx-auto m-2">
         

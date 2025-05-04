@@ -2,7 +2,7 @@
 "use client";
 import { SignInButton, UserButton } from "@clerk/clerk-react";
 import { Authenticated, Unauthenticated } from "convex/react";
-
+import Header from "./Header";
 // Import the components
 import UserForms from "@/components/UserForms"; // Adjust path if necessary
 import UserFiles from "@/components/UserFiles"; // Import the new component
@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"; // Optional: For visual s
 export default function Home() {
 
   return ( <>
+    <Header />
 
     <Unauthenticated>
       <div className="grid place-content-center h-lvh text-2xl">Welcome to Informal. Sign in to start.</div>

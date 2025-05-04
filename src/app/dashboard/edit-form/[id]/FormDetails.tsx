@@ -81,8 +81,9 @@ export default function FormDetails({ id }: { id: string } ) {
   };
 
   const handleOpenForm = () => {
+    console.log('Opening form...', formUrl, watchSlug);
      if (watchSlug) {
-         window.open(formUrl, '_blank');
+         window.open("http://"+formUrl, '_blank');
      }
   };
 

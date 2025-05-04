@@ -127,7 +127,9 @@ export default function UserForms() {
             <Authenticated>
                 {/* Header with title and New Form button */}
                 <div className="flex justify-between items-center mb-6"> {/* Added bottom margin for separation */}
+                    
                     <h2 className="text-2xl font-bold">Your Forms</h2>
+                    
                      <Button onClick={handleCreateClick} disabled={isCreating}>
                          {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
                          {isCreating ? "Creating..." : "New Form"}

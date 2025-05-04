@@ -190,7 +190,7 @@ export const generateAnalysis = action({
 
           **Task:**
 
-          Analyze the responses to determine individual and collective performance. Calculate correctness based on whether \`userSelectedOption\` matches \`correctAnswer\`. Identify areas where users struggled (weak topics/questions) and where they excelled (strong topics/questions). Provide actionable focus areas.
+          Analyze the responses to determine individual and collective performance. Calculate correctness based on whether \`userSelectedOption\` matches \`correctAnswer\`. Identify areas where users struggled (weak topics) and where they excelled (strong topics). Provide actionable focus areas.
 
           **Output Format:**
 
