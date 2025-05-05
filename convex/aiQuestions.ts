@@ -142,15 +142,37 @@ export const generateQuestions = action({
         console.log(`Generating ${args.numberOfQuestions} questions from file: ${fileRecord.name} (Type: ${fileRecord.type}, Size: ${fileArrayBuffer.byteLength} bytes)`); // Use byteLength for ArrayBuffer size
 
         // Define the text part of the prompt
-        const textPrompt = `Based *solely* on the content of the provided file (${fileRecord.name}), generate exactly ${args.numberOfQuestions} multiple-choice questions (MCQ).
-Each question should be based on the content of the file and should not be copied directly from the file. The questions should be diverse and challenging, covering a wide range of topics.
-The questions must be a little more complex than the average MCQ, a person must understand the content well to answer them.
-Each question should have:
-1.  A clear "question" text.
-2.  An array named "selectOptions" containing exactly 4 distinct string options.
-3.  A string named "answer" which must exactly match one of the strings in the "selectOptions" array.
+        const textPrompt = `
 
-Please format the entire output strictly as a single JSON array containing these question objects. Do not include any introductory text, explanations, markdown formatting, or anything else outside the JSON array structure. Example format for one question object: {"question": "...", "selectOptions": ["A", "B", "C", "D"], "answer": "B"}`;
+You are an expert question designer tasked with creating challenging, high-quality multiple-choice questions for an advanced quiz system. Your goal is to generate questions that assess a deep understanding of a given source.
+
+Based *solely* on the content of the provided file **${fileRecord.name}**, generate exactly **${args.numberOfQuestions}** multiple-choice questions (MCQs).
+
+**Guidelines:**
+
+* Do **not** copy text directly from the file.
+* Do **not** include any references to the file, document, or its origin in the questions.
+* Do **not** include any introductory text, explanations, or markdown.
+* Ensure questions are moderately complex and require a thoughtful understanding of the material.
+* Cover a diverse range of concepts within the file.
+
+Each question must be a JSON object with the following structure:
+
+1. \`"question"\` - A clear, standalone question string.
+2. \`"selectOptions"\` - An array of **exactly 4 distinct** answer choices (strings).
+3. \`"answer"\` - A string that **exactly matches** one of the entries in \`"selectOptions"\`.
+
+**Output format:** A single JSON array containing only the question objects.
+
+**Example:**
+
+\`\`\`json
+{
+  "question": "What is the main purpose of dependency injection in software architecture?",
+  "selectOptions": ["Improve testability", "Speed up execution", "Reduce memory usage", "Handle UI updates"],
+  "answer": "Improve testability"
+}
+\`\`\` `
 
         try {
             // Use generateText following the example structure

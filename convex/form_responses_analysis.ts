@@ -157,6 +157,7 @@ export const generateAnalysis = action({
              order: Number(q.order), // Convert BigInt to number if necessary for prompt
              type: q.type,
          }));
+         console.log("Formatted Responses for LLM:", formattedResponses);
 
 
         // --- LLM Call ---
@@ -190,8 +191,18 @@ export const generateAnalysis = action({
 
           **Task:**
 
-          Analyze the responses to determine individual and collective performance. Calculate correctness based on whether \`userSelectedOption\` matches \`correctAnswer\`. Identify areas where users struggled (weak topics) and where they excelled (strong topics). Provide actionable focus areas.
+          Analyze each response to determine individual accuracy and topic-level strengths/weaknesses. Also, aggregate the data to evaluate overall performance.
+Use the match between \`userSelectedOption\` and \`correctAnswer\` to compute correctness.
 
+**Your analysis should:**
+
+* Calculate individual correctness (correct count, total, and percentage).
+* Identify weak and strong topics per individual.
+* Suggest focus areas for each user.
+* Summarize collective performance (total correct, percentage).
+* Highlight common weak areas and overall suggestions for improvement.
+
+---
           **Output Format:**
 
           Return **only** a JSON object matching this exact structure:

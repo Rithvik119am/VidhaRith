@@ -207,25 +207,47 @@ export default function UserFiles() {
 
              {/* Upload Section */}
              <Card>
-                <CardHeader>
-                    <CardTitle>Upload a New File</CardTitle>
-                    <CardDescription>Select a file (max {MAX_FILE_SIZE_MB} MB) and click Upload.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                     <Input
-                        ref={fileInputRef}
-                        id="file-upload"
-                        type="file"
-                        onChange={handleFileChange}
-                        className="flex-grow"
-                        disabled={isUploading}
-                    />
-                    <Button onClick={handleUploadClick} disabled={!selectedFile || isUploading} className="w-full sm:w-auto">
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                        {isUploading ? "Uploading..." : "Upload"}
-                    </Button>
-                </CardContent>
-             </Card>
+    <CardHeader>
+        <CardTitle>Upload a New File</CardTitle>
+        {/* Adjust description as needed, MAX_FILE_SIZE_MB assumed */}
+        <CardDescription>Select a file (max {MAX_FILE_SIZE_MB} MB) and click Upload.</CardDescription>
+    </CardHeader>
+    <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        {/* The actual file input - hidden visually but triggered by the button */}
+        <Input
+            ref={fileInputRef}
+            id="file-upload"
+            type="file"
+            onChange={handleFileChange}
+            // Add accept attribute to only allow PDFs
+            accept=".pdf"
+            // Visually hide the default input, but keep it accessible
+            className="flex-grow hidden" // Or use CSS to hide non-visually if needed
+            disabled={isUploading}
+        />
+        {/* The button that users interact with */}
+        {/* onClick triggers the file input click */}
+        {/* Disable only when uploading */}
+        <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full sm:w-auto">
+            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            {isUploading ? "Uploading..." : "Select and Upload File"} {/* Button text reflects action */}
+        </Button>
+
+        {/* Optional: Display selected file name */}
+        {selectedFile && (
+             <div className="flex-grow text-sm text-gray-600 truncate">
+                 Selected: {selectedFile.name}
+             </div>
+        )}
+         {/* Add a separate button to trigger the actual upload *after* selecting a file */}
+        {/* This button would call the original upload logic (e.g., API call) */}
+         <Button onClick={handleUploadClick} disabled={!selectedFile || isUploading} className="w-full sm:w-auto">
+             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+             {isUploading ? "Uploading..." : "Initiate Upload"}
+         </Button>
+
+    </CardContent>
+</Card>
 
             {/* Files List Section */}
              <h3 className="text-xl font-semibold">Uploaded Files</h3>
