@@ -1,3 +1,4 @@
+// convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -7,6 +8,12 @@ export default defineSchema({
         description: v.optional(v.string()),
         name: v.optional(v.string()),
         slug: v.string(),
+        // --- NEW FIELDS ---
+        startTime: v.optional(v.int64()), // Optional start time (Unix timestamp ms)
+        endTime: v.optional(v.int64()),   // Optional end time (Unix timestamp ms)
+        acceptingResponses: v.boolean(), // Explicitly track if accepting responses (manual override)
+        timeLimitMinutes: v.optional(v.int64()), // Optional time limit in minutes
+        // --- END NEW FIELDS ---
       }).index("by_slug", ["slug"]),
     form_responses: defineTable({
       formId: v.id("forms"),
@@ -15,14 +22,12 @@ export default defineSchema({
       values: v.array(
         v.object({ questionId:v.id("form_questions") , question: v.string(), userSelectedOption: v.string() })
       ),
+       // --- NEW FIELD (For Time Limit Tracking) ---
+       submittedAt: v.int64(), // Timestamp when the response was submitted
+       sessionStartTime: v.optional(v.int64()) // Timestamp when the user started this attempt (needed for time limit)
+      // --- END NEW FIELD ---
     }).index("by_formId", ["formId"]),
-    form_fields: defineTable({
-      formId: v.string(),
-      name: v.string(),
-      order: v.float64(),
-      selectOptions: v.optional(v.array(v.string())),
-      type: v.string(),
-    }),
+
     form_questions: defineTable({
       formId: v.id("forms"),
       question: v.string(),
