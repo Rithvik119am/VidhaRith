@@ -1,11 +1,11 @@
-// src/app/f/[id]/page.tsx  (Assuming your slug param is named 'id' in the folder structure)
+// src/app/f/[id]/page.tsx
 
 "use client";
 
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api'; // Adjust path as needed
 import { Id } from '../../../../convex/_generated/dataModel'; // Adjust path as needed
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -13,25 +13,25 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
   FormControl,
-  FormField, // Import FormField for proper structure (though not explicitly used here, good practice)
-  FormItem,  // Import FormItem
-  FormLabel, // Import FormLabel
-  FormMessage, // Import FormMessage
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label'; // Keep Label for RadioGroup options
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { AlertCircle, CheckCircle, Clock, Info, Loader2, Ban } from 'lucide-react'; // Import icons
 
 // Interface for form values (mapping question ID to selected option value)
 interface QuizFormValues {
-  [questionId: string]: string; // e.g., { "q1_id": "option_a", "q2_id": "option_c" }
+  [questionId: string]: string;
 }
 
 // --- Helper Function to Format Time ---
-function formatTime(totalSeconds: number): string {
-  if (totalSeconds < 0) totalSeconds = 0;
+function formatTime(totalSeconds: number | null): string {
+  if (totalSeconds === null || totalSeconds < 0) totalSeconds = 0;
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = Math.floor(totalSeconds % 60);
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -39,19 +39,23 @@ function formatTime(totalSeconds: number): string {
 
 // --- Main Page Component ---
 export default function Page({ params }: { params: { id: string } }) {
-  const slug = params.id; // Use slug consistently
+  const slug = params.id;
 
   // --- State Variables ---
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [timeExpired, setTimeExpired] = useState(false);
+  const [timeExpired, setTimeExpired] = useState(false); // State to track expiration
   const [availabilityStatus, setAvailabilityStatus] = useState<{
     available: boolean;
     message: string | null;
     icon: React.ElementType | null;
   }>({ available: false, message: "Checking form availability...", icon: Loader2 });
+
+  // --- Refs for Timer ---
+  // Use refs to hold values that shouldn't trigger re-renders when they change inside effects
+  const startTimeRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- Convex Queries & Mutations ---
   const formDetails = useQuery(api.forms.getBySlug, { slug });
@@ -91,7 +95,9 @@ export default function Page({ params }: { params: { id: string } }) {
 
   // Effect to reset the form when schema/defaults change (e.g., questions load)
   useEffect(() => {
-    form.reset(defaultVals);
+     if (Object.keys(defaultVals).length > 0 || Object.keys(form.formState.defaultValues || {}).length > 0) {
+         form.reset(defaultVals);
+     }
   }, [formSchema, defaultVals, form.reset]); // Dependencies: schema, defaults, reset function
 
   // --- Availability Check Effect ---
@@ -135,54 +141,92 @@ export default function Page({ params }: { params: { id: string } }) {
 
   // --- Timer Initialization & Management Effect ---
   useEffect(() => {
-    // Only start timer if the form is available, has a time limit, questions are loaded, and timer isn't already running/expired
-    if (
-        availabilityStatus.available &&
-        formDetails &&
-        formDetails.timeLimitMinutes &&
-        questions && // Ensure questions are loaded
-        sessionStartTime === null && // Only set start time once
-        !timeExpired
-      ) {
-      const startTime = Date.now();
-      setSessionStartTime(startTime);
-      const limitSeconds = Number(formDetails.timeLimitMinutes) * 60;
-      setTimeLeft(limitSeconds);
+    // Check if timer should be active:
+    // 1. Form is available (not closed by availability check)
+    // 2. Form has a time limit set
+    // 3. Questions are loaded (implies schema/form are ready)
+    // 4. Time has not *already* expired in this session
+    const timerShouldBeActive =
+      availabilityStatus.available &&
+      formDetails?.timeLimitMinutes !== undefined &&
+      formDetails.timeLimitMinutes !== null &&
+      questions &&
+      !timeExpired;
 
+    // If timer should be active AND hasn't started yet in this session
+    if (timerShouldBeActive && startTimeRef.current === null) {
+      const startTime = Date.now();
+      startTimeRef.current = startTime; // Record start time using ref
+      const limitSeconds = Number(formDetails.timeLimitMinutes) * 60;
+      setTimeLeft(limitSeconds); // Set initial time
+
+      // Start the interval
       const intervalId = setInterval(() => {
-        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        // Calculate remaining time based on current time and stored start time
+        const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current!) / 1000);
         const remaining = limitSeconds - elapsedSeconds;
 
         if (remaining <= 0) {
           setTimeLeft(0);
-          setTimeExpired(true);
-          clearInterval(intervalId);
+          setTimeExpired(true); // Set expiration state
+          clearInterval(intervalId); // Clear this interval
+          timerIntervalRef.current = null; // Clear interval ref
+          // Display a toast notification when time runs out
           toast.warning("Time's up! Your responses cannot be submitted.", { duration: 10000 });
         } else {
-          setTimeLeft(remaining);
+          setTimeLeft(remaining); // Update state, this triggers re-render and countdown display
         }
       }, 1000); // Update every second
 
-      // Cleanup function to clear interval when component unmounts or dependencies change
-      return () => clearInterval(intervalId);
+      timerIntervalRef.current = intervalId; // Store interval ID in ref
+
+    } else if (!timerShouldBeActive && timerIntervalRef.current) {
+       // If conditions for timer are no longer met (e.g., form becomes unavailable, time limit removed)
+       // AND there's a running timer, clear it.
+       clearInterval(timerIntervalRef.current);
+       timerIntervalRef.current = null;
+       startTimeRef.current = null; // Reset start time ref
+       setTimeLeft(null); // Clear time left state
+       // Important: Don't reset timeExpired here if the reason !timerShouldBeActive is true
+       // is because timeExpired was set to true by the interval itself.
+       // The state timeExpired being true is what we rely on to switch views.
+       // We only reset timeExpired if it was due to external factors changing,
+       // but the current logic handles this correctly by just stopping the timer.
+
     }
+     // Note: If timerShouldBeActive becomes true but startTimeRef.current is *already* set
+     // (e.g., component re-rendered for unrelated reason while timer was active),
+     // the timer is NOT reset, it continues running based on the existing startTimeRef.current.
+     // This is the desired behavior for session continuity.
 
-    // If form becomes unavailable or time limit is removed, clear timer state
-     if (!availabilityStatus.available || (formDetails && !formDetails.timeLimitMinutes)) {
-         setSessionStartTime(null);
-         setTimeLeft(null);
-         setTimeExpired(false);
-     }
+    // Cleanup function: Clear interval on unmount or when dependencies change such that
+    // the effect might re-run and set up a *new* interval (handled by the else if).
+    // It also serves as a final cleanup on component unmount.
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      // Reset refs and state on cleanup to ensure a clean slate if the component re-mounts
+      // or if the effect dependency changes stop the timer.
+      startTimeRef.current = null;
+      setTimeLeft(null);
+      setTimeExpired(false); // Reset time expired state on cleanup/unmount
+    };
 
-  }, [availabilityStatus.available, formDetails, questions, sessionStartTime, timeExpired]); // Dependencies for timer logic
+  }, [availabilityStatus.available, formDetails?.timeLimitMinutes, questions]); // Dependencies for timer logic. Removed `timeExpired` from dependencies!
 
 
   // --- Form Submission Handler ---
   const handleSubmit = async (values: QuizFormValues) => {
     // Double-check conditions before submitting
+    // Crucially, check if timeExpired is true
     if (!formId || !questions || !availabilityStatus.available || timeExpired) {
-      toast.error('Cannot submit the form. It might be closed, not yet open, or the time limit expired.');
-      return;
+       const reason = timeExpired ? "time limit expired" : (availabilityStatus.message || "form is unavailable");
+       toast.error(`Cannot submit the form: ${reason}.`);
+       // If time expired, setting state again doesn't hurt but isn't strictly needed here
+       if (timeExpired) setTimeExpired(true); // Reinforce timeExpired state if called somehow
+       return; // PREVENT SUBMISSION
     }
 
     setIsSubmitting(true);
@@ -198,11 +242,11 @@ export default function Page({ params }: { params: { id: string } }) {
     });
 
     try {
-      // Send slug, response values, and sessionStartTime (if applicable)
+      // Send slug, response values, and sessionStartTime (if applicable, from ref)
       await addResponse({
         slug: slug,
         values: responseValues,
-        sessionStartTime: sessionStartTime ? BigInt(sessionStartTime) : undefined, // Convert number to BigInt for timestamp
+        sessionStartTime: startTimeRef.current ? BigInt(startTimeRef.current) : undefined, // Convert number from ref to BigInt
       });
       setIsSubmitted(true); // Update state to show success message
       toast.success('Your submission was recorded. Thank you ❤️');
@@ -222,7 +266,18 @@ export default function Page({ params }: { params: { id: string } }) {
     return <FormSkeleton message="Loading form details..." />;
   }
 
-  // 2. Form Not Found or Not Available
+  // 2. Form Not Found
+  if (formDetails === null) {
+     return (
+       <FormClosedMessage
+         message={availabilityStatus.message ?? `Form not found for slug: ${slug}`}
+         icon={availabilityStatus.icon ?? AlertCircle}
+       />
+     );
+   }
+
+  // 3. Form Available Check (Manual override, start/end times)
+  // Check this AFTER formDetails is loaded (not null/undefined)
   if (!availabilityStatus.available) {
     return (
       <FormClosedMessage
@@ -232,7 +287,7 @@ export default function Page({ params }: { params: { id: string } }) {
     );
   }
 
-  // 3. Loading Questions (Form details loaded, form is available)
+  // 4. Loading Questions (Form details loaded, form is available)
   if (questions === undefined && formId) {
     return (
       <FormSkeleton
@@ -244,7 +299,7 @@ export default function Page({ params }: { params: { id: string } }) {
     );
   }
 
-  // 4. No Questions Available
+  // 5. No Questions Available
   if (questions && questions.length === 0) {
     return (
       <div className="container mx-auto p-4 md:p-8 max-w-2xl bg-white rounded-lg shadow-sm">
@@ -263,7 +318,8 @@ export default function Page({ params }: { params: { id: string } }) {
     );
   }
 
-   // 5. Form Schema Not Ready (Should be brief, handled by useMemo/useEffect)
+   // 6. Form Schema Not Ready (Should be brief, handled by useMemo/useEffect)
+   // This check prevents rendering the form structure before RHF is ready
    if (Object.keys(formSchema.shape).length === 0 && questions && questions.length > 0) {
      return (
        <FormSkeleton
@@ -276,7 +332,7 @@ export default function Page({ params }: { params: { id: string } }) {
    }
 
 
-  // 6. Render Submitted View
+  // 7. Render Submitted View
   if (isSubmitted) {
     return (
       <div className="container mx-auto p-4 md:p-8 max-w-2xl">
@@ -293,7 +349,19 @@ export default function Page({ params }: { params: { id: string } }) {
     );
   }
 
-  // 7. Render the Active Form
+  // 8. Render Time Expired View (NEW CHECK)
+  // Check this AFTER availability and loading, BUT BEFORE rendering the form
+  if (timeExpired) {
+     return (
+        <FormClosedMessage // Reuse the component for displaying messages
+           message="Time's Up! You can no longer submit this form."
+           icon={Clock} // Use the clock icon
+        />
+     );
+  }
+
+
+  // 9. Render the Active Form (Only if none of the above conditions are met)
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-2xl bg-white rounded-lg shadow-md">
       {/* Form Header */}
@@ -305,33 +373,37 @@ export default function Page({ params }: { params: { id: string } }) {
       </div>
 
       {/* Timer Display (if applicable) */}
-      {timeLeft !== null && (
-          <div className={`sticky top-0 z-10 mb-6 p-3 rounded-md border flex items-center justify-center space-x-2 text-sm sm:text-base font-medium shadow-sm ${timeExpired ? 'bg-red-100 border-red-300 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
-              <Clock className="h-5 w-5" />
-              <span>Time Remaining: {formatTime(timeLeft)}</span>
-          </div>
-      )}
-      {timeExpired && (
-          <div className="mb-6 p-3 rounded-md border bg-red-100 border-red-300 text-red-700 text-center text-sm font-medium">
-              Time's up! You can no longer submit this form.
-          </div>
+      {/* Only show timer area if timeLimitMinutes is set on the form */}
+      {formDetails.timeLimitMinutes !== undefined && formDetails.timeLimitMinutes !== null && (
+         <>
+          {/* Show counting down timer OR the final 00:00 */}
+          {(timeLeft !== null) && ( // Show timer if timeLeft is initialized
+              <div className={`sticky top-0 z-10 mb-6 p-3 rounded-md border flex items-center justify-center space-x-2 text-sm sm:text-base font-medium shadow-sm ${timeExpired ? 'bg-red-100 border-red-300 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                  <Clock className="h-5 w-5" />
+                  {/* Display the formatted time, will be 00:00 if timeExpired is true */}
+                  <span>Time Remaining: {formatTime(timeLeft)}</span>
+              </div>
+          )}
+          {/* This block is now mostly redundant because the main render logic handles showing a separate "Time Expired" view,
+              but keeping it here provides a fallback message directly *within* the form context if somehow
+              the main render logic didn't switch views correctly. However, removing it simplifies things.
+              Let's rely on the main render logic switch. */}
+         </>
       )}
 
 
       {/* Form Rendering */}
       <Form {...form}>
         <form
-          // Using formId in key forces re-render if form changes, might not be necessary here
-          // key={formId}
           onSubmit={form.handleSubmit(handleSubmit)}
           className="space-y-8"
         >
           {questions && questions.map((question, index) => (
-            <FormField // Use FormField for structure and accessibility linking
+            <FormField
                 control={form.control}
-                name={question._id} // Name corresponds to the key in form values/schema
+                name={question._id}
                 key={question._id}
-                render={({ field }) => ( // Use render prop pattern
+                render={({ field }) => (
                 <FormItem className="bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200 space-y-3">
                   {/* Question Text */}
                   <FormLabel className="text-base sm:text-lg font-semibold !mb-3 block text-gray-800">
@@ -341,23 +413,25 @@ export default function Page({ params }: { params: { id: string } }) {
                   {/* Radio Group for Options */}
                   <FormControl>
                     <RadioGroup
-                      onValueChange={field.onChange} // Use field.onChange from RHF
-                      value={field.value} // Controlled component using field.value
+                      onValueChange={field.onChange}
+                      value={field.value}
                       className="space-y-2"
+                      // Disable radio group if time expired or form is submitting
+                      disabled={timeExpired || isSubmitting}
                     >
                       {question.selectOptions?.map((option, optIndex) => (
-                        <FormItem // Nest FormItem for each radio option
+                        <FormItem
                             key={`${question._id}-${optIndex}`}
                             className="flex items-center space-x-3 p-2 rounded hover:bg-gray-100 transition-colors"
                         >
                             <FormControl>
                                 <RadioGroupItem
                                     value={option}
-                                    id={`${question._id}-${optIndex}`} // Unique ID for label association
+                                    id={`${question._id}-${optIndex}`}
                                 />
                             </FormControl>
                             <Label
-                                htmlFor={`${question._id}-${optIndex}`} // Associate label with radio item
+                                htmlFor={`${question._id}-${optIndex}`}
                                 className="font-normal text-sm sm:text-base text-gray-700 cursor-pointer flex-1"
                             >
                                 {option}
@@ -379,8 +453,8 @@ export default function Page({ params }: { params: { id: string } }) {
               type="submit"
               // Disable if submitting, time expired, or form is invalid
               disabled={isSubmitting || timeExpired || !form.formState.isValid}
-              className="min-w-[120px] text-base" // Ensure minimum width
-              aria-live="polite" // Announce changes for screen readers
+              className="min-w-[120px] text-base"
+              aria-live="polite"
             >
               {isSubmitting ? (
                 <>
@@ -388,7 +462,7 @@ export default function Page({ params }: { params: { id: string } }) {
                   Submitting...
                 </>
               ) : timeExpired ? (
-                 "Time Expired"
+                 "Time Expired" // Button text changes when time is up
               ) : (
                 "Submit Answers"
               )}
@@ -455,7 +529,8 @@ function FormClosedMessage({ message, icon: Icon = Info }: { message: string, ic
              <div className="text-center p-8 rounded-lg shadow-md border border-yellow-200 bg-yellow-50">
                  <Icon className="mx-auto h-10 w-10 text-yellow-500 mb-4" />
                 <h2 className="text-yellow-700 text-lg sm:text-xl font-semibold mb-2">
-                  Form Unavailable
+                  {/* Use a generic title or pass one if needed, but "Form Unavailable" works for time expired too */}
+                   Status Update
                 </h2>
                 <p className="text-yellow-600 text-sm sm:text-base">
                     {message}
