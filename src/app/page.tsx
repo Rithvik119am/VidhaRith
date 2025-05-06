@@ -7,30 +7,26 @@ import Header from "./Header";
 import UserForms from "@/components/UserForms"; // Adjust path if necessary
 import UserFiles from "@/components/UserFiles"; // Import the new component
 import { Separator } from "@/components/ui/separator"; // Optional: For visual separation
-
+import Navbar from "@/components/landing-page/Navbar";
+import Hero from "@/components/landing-page/Hero";
+import Features from "@/components/landing-page/Features";
+import HowItWorks from "@/components/landing-page/HowItWorks";
+import Testimonials from "@/components/landing-page/Testimonials";
+import Pricing from "@/components/landing-page/Pricing";
+import Footer from "@/components/landing-page/Footer";
 export default function Home() {
 
   return ( <>
-    <Header />
-
-    <Unauthenticated>
-      <div className="grid place-content-center h-lvh text-2xl">Welcome to Informal. Sign in to start.</div>
-    </Unauthenticated>
-
-    <Authenticated>
-        {/* Container to manage layout */}
-        <div className="container mx-auto py-8 space-y-12"> {/* Add more vertical space */}
-
-            {/* User Forms Section */}
-            <UserForms />
-
-            {/* Optional Separator */}
-            <Separator />
-
-             {/* User Files Section */}
-             <UserFiles />
-
-        </div>
-    </Authenticated>
+    <div className="min-h-screen">
+      <Navbar />
+      <main>
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <Testimonials />
+        <Pricing />
+      </main>
+      <Footer />
+    </div>
   </>);
 }
