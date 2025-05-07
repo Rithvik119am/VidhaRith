@@ -309,7 +309,7 @@ export default function FormDetails({ id }: { id: string } ) {
                      </PopoverContent>
                    </Popover>
                    <FormDescription>
-                     Form won't accept responses before this time (uses your browser's local timezone for selection). Cleared if left empty.
+                     Form won&apos;t accept responses before this time (uses your browser&apos;s local timezone for selection). Cleared if left empty.
                    </FormDescription>
                    <FormMessage />
                  </FormItem>
@@ -375,7 +375,7 @@ export default function FormDetails({ id }: { id: string } ) {
                      </PopoverContent>
                    </Popover>
                    <FormDescription>
-                     Form automatically stops after this time (local timezone). The manual 'Stop' button overrides this.
+                     Form automatically stops after this time (local timezone). The manual &apos;Stop&apos; button overrides this.
                    </FormDescription>
                    <FormMessage /> {/* Shows Zod refinement error if end < start */}
                  </FormItem>

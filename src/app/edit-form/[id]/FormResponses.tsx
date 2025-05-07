@@ -179,7 +179,7 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
 
     // --- No Responses State ---
     if (processedResponses.length === 0) {
-        return <p className="mt-6 text-center text-muted-foreground">No responses submitted yet. Share the form's URL to collect responses.</p>;
+        return <p className="mt-6 text-center text-muted-foreground">No responses submitted yet. Share the form&apos;s URL to collect responses.</p>;
     }
 
     // --- Display Processed Responses ---

@@ -315,7 +315,7 @@ export default function UserFiles() {
                                                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                                         <AlertDialogDescription>
                                                             This action cannot be undone. This will permanently delete the file
-                                                            <span className="font-semibold"> "{userFiles.find(f => f._id === deletingFileId)?.name}" </span>
+                                                            <span className="font-semibold"> &ldquo;{userFiles.find(f => f._id === deletingFileId)?.name}&ldquo; </span>
                                                             from storage and remove its record.
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
@@ -340,7 +340,7 @@ export default function UserFiles() {
 
              {userFiles && userFiles.length === 0 && ( // Empty State
                 <div className="text-center p-6 border rounded-md bg-muted/20">
-                    <p className="text-muted-foreground">You haven't uploaded any files yet.</p>
+                    <p className="text-muted-foreground">You haven&quot;t uploaded any files yet.</p>
                 </div>
             )}
 

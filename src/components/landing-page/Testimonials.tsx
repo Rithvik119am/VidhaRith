@@ -1,6 +1,6 @@
 
 import { cn } from "@/lib/utils";
-
+import Image from "next/image"
 interface TestimonialProps {
   quote: string;
   name: string;
@@ -19,11 +19,12 @@ const Testimonial = ({ quote, name, title, image, className }: TestimonialProps)
         <span key={star} className="text-yellow-400">★</span>
       ))}
     </div>
-    <p className="mb-6 text-foreground/80 italic">"{quote}"</p>
+    <p className="mb-6 text-foreground/80 italic">&ldquo;{quote}&ldquo;</p>
     <div className="flex items-center">
       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-quiz-primary font-bold mr-3">
         {image ? (
-          <img src={image} alt={name} className="w-full h-full object-cover rounded-full" />
+          <Image src={image} alt={name} className="w-full h-full object-cover rounded-full" width={500}
+          height={300} />
         ) : (
           name.charAt(0)
         )}

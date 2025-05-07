@@ -191,7 +191,7 @@ export default function UserForms() {
                                                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                                         <AlertDialogDescription>
                                                             This action cannot be undone. This will permanently delete the form
-                                                            <span className="font-semibold"> "{forms.find(f => f._id === deletingFormId)?.name || `Form ${deletingFormId?.slice(-4) || '...'}`}" </span>
+                                                            <span className="font-semibold"> &ldquo;{forms.find(f => f._id === deletingFormId)?.name || `Form ${deletingFormId?.slice(-4) || '...'}`}&ldquo; </span>
                                                             and all associated questions and responses.
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
@@ -215,7 +215,7 @@ export default function UserForms() {
                 ) : (
                     // Empty state message
                     <div className="text-center p-6 border rounded-md bg-muted/20">
-                        <p className="text-muted-foreground">You don't have any forms yet. Create your first one!</p>
+                        <p className="text-muted-foreground">You don&quot;t have any forms yet. Create your first one!</p>
                     </div>
                 )}
 

@@ -1,6 +1,6 @@
 
 import { cn } from "@/lib/utils";
-
+import Image from "next/image"
 interface StepProps {
   number: number;
   title: string;
@@ -52,7 +52,7 @@ const HowItWorks = () => {
               How <span className="gradient-text">VidhaRith</span> Works
             </h2>
             <p className="text-lg text-muted-foreground mb-10">
-              Our straightforward process helps you gain valuable insights about your students' understanding in just a few easy steps.
+              Our straightforward process helps you gain valuable insights about your students&apos; understanding in just a few easy steps.
             </p>
             
             <div className="space-y-2">
@@ -70,10 +70,12 @@ const HowItWorks = () => {
           
           <div className="relative">
             <div className="bg-quiz-light rounded-2xl p-6 relative z-10">
-              <img
-                src="https://source.unsplash.com/photo-1486312338219-ce68d2c6f44d"
+              <Image
+                src="/2.png"
                 alt="Teacher using Quiz Genie"
                 className="rounded-lg shadow-lg w-full"
+                width={1200}
+                height={900}
               />
             </div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full bg-quiz-primary rounded-full blur-3xl opacity-10 -z-10"></div>

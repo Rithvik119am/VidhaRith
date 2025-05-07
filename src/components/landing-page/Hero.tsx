@@ -1,6 +1,6 @@
 
 import CTAButton from "./CTAButton";
-
+import Image from "next/image"
 const Hero = () => {
   return (
     <section className="pt-28 pb-20 md:pt-40 md:pb-32 bg-gradient-to-b from-white to-quiz-light">
@@ -24,10 +24,12 @@ const Hero = () => {
           </div>
           <div className="flex-1 relative">
             <div className="relative z-10 bg-white p-5 rounded-xl shadow-xl">
-              <img
-                src="https://source.unsplash.com/photo-1488590528505-98d2b5aba04b"
+              <Image
+                src="/1.png"
                 alt="Quiz Genie Analytics Dashboard"
                 className="rounded-lg w-full object-cover h-auto"
+                width={1200}
+                height={900}
               />
             </div>
             <div className="absolute top-10 -right-10 bg-quiz-accent rounded-full w-32 h-32 blur-3xl opacity-70 z-0"></div>

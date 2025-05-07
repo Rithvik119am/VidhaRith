@@ -72,7 +72,7 @@ export default function AiQuestionGenerator({ formId }: AiQuestionGeneratorProps
                 <div>
                     <Label htmlFor="ai-file-select">Select File Content</Label>
                      {userFiles === undefined && <p className="text-sm text-muted-foreground">Loading files...</p>}
-                     {userFiles && userFiles.length === 0 && <p className="text-sm text-muted-foreground">You haven't uploaded any files yet.</p>}
+                     {userFiles && userFiles.length === 0 && <p className="text-sm text-muted-foreground">You haven&apos;t uploaded any files yet.</p>}
                     {userFiles && userFiles.length > 0 && (
                         <Select
                             value={selectedStorageId}

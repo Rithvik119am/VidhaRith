@@ -7,6 +7,7 @@ interface FeatureCardProps {
   title: string;
   description: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const FeatureCard = ({ icon, title, description, className }: FeatureCardProps) => (
