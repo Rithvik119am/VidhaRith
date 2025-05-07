@@ -4,7 +4,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { ConvexError } from 'convex/values';
-
+import { rateLimiter } from './rate_limit';
 // --- AI SDK Imports ---
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
@@ -84,6 +84,7 @@ export const generateAnalysis = action({
          if (!identity) {
              throw new ConvexError("User must be logged in to generate analysis.");
          }
+         await rateLimiter.check(ctx, "responceAnalysis", {key: identity.subject,throws: true});
 
         // --- Authorization: Ensure user owns the form ---
         const form = await ctx.runQuery(internal.forms.getFormForOwner, { formId: args.formId });

@@ -7,7 +7,7 @@ import { Id } from "./_generated/dataModel";
 // --- Vercel AI SDK v3 Imports ---
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google'; // Use the newer @ai-sdk/google provider
-
+import { rateLimiter } from "./rate_limit";
 // Define the expected structure (Keep as is)
 interface GeneratedQuestion {
     question: string;
@@ -114,6 +114,7 @@ export const generateQuestions = action({
         if (!identity) {
             throw new Error("User must be logged in to generate questions.");
         }
+        await rateLimiter.check(ctx, "generateQuestions", { key: identity.subject ,throws: true});
 
         const form = await ctx.runQuery(internal.forms.getFormForOwner, { formId: args.formId });
          if (!form || form.createdBy !== identity.subject) {

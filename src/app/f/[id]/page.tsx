@@ -64,7 +64,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
   // Skip questions query if formId isn't available yet
   const questions = useQuery(
-    api.form_questions.getFormQuestions,
+    api.form_questions.getFormQuestionsForQuiz,
     formId ? { formId } : 'skip'
   );
 

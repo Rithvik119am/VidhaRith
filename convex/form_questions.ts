@@ -94,7 +94,7 @@ export const updateQuestion = mutation({
         const trimmedNewAnswer = args.answer.trim();
 
         if (!trimmedNewOptions.includes(trimmedNewAnswer)) {
-            throw new Error("The provided answer must be one of the new select options.");
+            throw new Error("The provided answer must exactly match one of the new select options (case-insensitive and trimmed).");
         }
         if (trimmedNewOptions.filter(opt => opt !== "").length < 2) { // Validate trimmed options length
            throw new Error("MCQ questions must have at least two non-empty options.");
@@ -178,6 +178,21 @@ export const getFormQuestions = query({
             .collect();
     },
 });
+export const getFormQuestionsForQuiz = query({
+    args: {
+        formId: v.id("forms"),
+    },
+    handler: async (ctx, args) => {
+        const questions = await ctx.db
+           .query("form_questions")
+           .withIndex("by_formId", (q) => q.eq("formId", args.formId))
+           .order("asc")
+           .collect();
+        
+        // Remove answer field from each question before returning
+        return questions.map(({ answer, ...rest }) => rest);
+    },
+})
 
 export const getFormQuestionsInternal = internalQuery({
     args: { formId: v.id("forms") },

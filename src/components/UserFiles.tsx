@@ -94,6 +94,7 @@ export default function UserFiles() {
     setIsUploading(true);
     try {
       const postUrl = await generateUploadUrl();
+      
 
       const result = await fetch(postUrl, {
         method: "POST",

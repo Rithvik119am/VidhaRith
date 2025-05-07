@@ -68,6 +68,17 @@ export const generateUploadUrl = mutation({
     if (!identity) {
       throw new Error("User must be logged in to upload files.");
     }
+  // Check how many files the user has uploaded
+  const userFiles = await ctx.db
+    .query("files")
+    .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+    .collect();
+
+  const fileCount = userFiles.length;
+  const MAX_NO_OF_FILES = 4;
+  if (fileCount >= MAX_NO_OF_FILES) { // Adjust limit as needed
+    throw new Error("You have reached the maximum number of allowed files.");
+  }
     return await ctx.storage.generateUploadUrl();
   },
 });

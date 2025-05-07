@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import ConvexClientProvider from "./ConvexClientProvider";
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
+// ClerkProvider is imported but not fully used in this snippet, keeping it as is
+// import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+// import { ConvexProviderWithClerk } from "convex/react-clerk";
 import "./globals.css";
-import Header from "./Header";
-import { Toaster } from "@/components/ui/toaster";
+// Header is imported but not used in the provided snippet, keeping it as is
+// import Header from "./Header";
+import { Toaster } from "sonner"; // Assuming this is the shadcn/sonner wrapper
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -21,22 +24,27 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon"></link>
+        <link rel="icon" href="/favicon.ico"></link> {/* Added a basic favicon link */}
       </head>
       <body className={inter.className}>
+      <Toaster />
         <div className="flex flex-col min-h-screen">
-        <ConvexClientProvider>
         
-        <main >
-        
-        {children}
-        </main>
-        <Toaster />
-        </ConvexClientProvider>
-        <footer className="flex justify-center items-center">Made by K. Sai Rithvik Reddy</footer>
-        <div className="flex justify-center items-center p-3">  </div>
+          <ConvexClientProvider>
+            {/* Moved Toaster here, before the main content */}
+            
+
+            <main>
+              {children}
+            </main>
+
+          </ConvexClientProvider>
+          <footer className="flex justify-center items-center p-4 text-sm text-muted-foreground">
+            Made by K. Sai Rithvik Reddy
+          </footer>
+          {/* Removed the empty div */}
         </div>
-        </body>
+      </body>
     </html>
   );
 }

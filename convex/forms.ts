@@ -3,7 +3,7 @@ import { ConvexError, v } from 'convex/values';
 import { mutation, query, internalQuery } from './_generated/server';
 import { AnyDataModel, GenericMutationCtx } from 'convex/server';
 import { Id } from "./_generated/dataModel"; // Import Id
-
+import {rateLimiter} from "./rate_limit";
 // generateUniqueSlug function remains the same...
 const generateUniqueSlug = async (ctx: GenericMutationCtx<AnyDataModel>) => {
     // ... (keep existing implementation)
@@ -31,6 +31,10 @@ export const create = mutation({
         if (identity === null) {
             throw new ConvexError("Not authenticated"); // Use ConvexError for better error handling
         }
+        await rateLimiter.limit(ctx, "formsCreation",{
+            key: identity.subject,
+            throws: true,
+        });
         console.log("Creating form for user ID", identity.subject);
         const newFormId = await ctx.db.insert("forms", {
             createdBy: identity.subject,
