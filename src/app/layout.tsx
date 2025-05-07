@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Informal",
+  title: "VidhaRith",
   description: "Make forms with Convex and Love",
 };
 
@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="https://zany.sh/favicon.svg?emoji=📋"></link>
+        <link rel="icon"></link>
       </head>
       <body className={inter.className}>
         <div className="flex flex-col min-h-screen">

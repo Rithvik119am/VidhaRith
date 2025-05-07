@@ -2,7 +2,7 @@
 
 "use client";
 import { Authenticated, Unauthenticated } from 'convex/react';
-import { Id } from '../../../../convex/_generated/dataModel';
+import { Id } from '../../../../../convex/_generated/dataModel';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -15,6 +15,7 @@ import FormAnalysis from './FormAnalysis'; // <-- Import the new component
 export default function Page({ params }: { params: { id: Id<"forms"> } }) {
 
   const formId = params.id;
+  
 
   return (
     <div className="container mx-auto py-8"> {/* Add container and padding */}
@@ -26,7 +27,7 @@ export default function Page({ params }: { params: { id: Id<"forms"> } }) {
         <Tabs defaultValue="details_questions" className="w-full"> {/* Set a default tab */}
           {/* --- Updated TabsList to include Analysis --- */}
           <TabsList className="grid w-full grid-cols-3 mx-auto mb-6 md:w-[500px]"> {/* Changed grid-cols-3 */}
-            <TabsTrigger value="details_questions">Settings & Questions</TabsTrigger>
+            <TabsTrigger value="details_questions">Form Settings</TabsTrigger>
             <TabsTrigger value="responses">Responses</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger> {/* <-- Added Analysis Trigger */}
           </TabsList>

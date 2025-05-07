@@ -20,6 +20,7 @@ interface AiQuestionGeneratorProps {
 export default function AiQuestionGenerator({ formId }: AiQuestionGeneratorProps) {
     // Fetch user's uploaded files
     const userFiles = useQuery(api.files.getUserFiles);
+    const formDetails = useQuery(api.forms.get, { formId });
     const generateQuestionsAction = useAction(api.aiQuestions.generateQuestions);
 
     const [selectedStorageId, setSelectedStorageId] = useState<Id<"_storage"> | "">("");
@@ -113,7 +114,7 @@ export default function AiQuestionGenerator({ formId }: AiQuestionGeneratorProps
                 {/* Submit Button */}
                 <Button
                     type="submit"
-                    disabled={isLoading || !userFiles || userFiles.length === 0 || !selectedStorageId}
+                    disabled={isLoading || !userFiles || userFiles.length === 0 || !selectedStorageId || formDetails?.generationStatus === "generating"}
                 >
                     {isLoading ? (
                         <>

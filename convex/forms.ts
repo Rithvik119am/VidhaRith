@@ -2,6 +2,7 @@
 import { ConvexError, v } from 'convex/values';
 import { mutation, query, internalQuery } from './_generated/server';
 import { AnyDataModel, GenericMutationCtx } from 'convex/server';
+import { Id } from "./_generated/dataModel"; // Import Id
 
 // generateUniqueSlug function remains the same...
 const generateUniqueSlug = async (ctx: GenericMutationCtx<AnyDataModel>) => {
@@ -25,12 +26,12 @@ const generateUniqueSlug = async (ctx: GenericMutationCtx<AnyDataModel>) => {
 
 
 export const create = mutation({
-    handler: async (ctx, args) => {
+    handler: async (ctx) => { // Removed args as they weren't used
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated"); // Use ConvexError for better error handling
         }
-        console.log("Creating form ID", identity);
+        console.log("Creating form for user ID", identity.subject);
         const newFormId = await ctx.db.insert("forms", {
             createdBy: identity.subject,
             slug: await generateUniqueSlug(ctx),
@@ -39,6 +40,7 @@ export const create = mutation({
             startTime: undefined,       // No specific start time initially
             endTime: undefined,         // No specific end time initially
             timeLimitMinutes: undefined, // No time limit initially
+            generationStatus: "not generating", // Initialize generation status
             // --- END NEW DEFAULTS ---
         });
         return newFormId;
@@ -56,12 +58,13 @@ export const update = mutation({
         endTime: v.optional(v.int64()),
         timeLimitMinutes: v.optional(v.int64()),
         // Note: acceptingResponses is handled by toggleStatus mutation
+        // generationStatus is managed by AI actions, not this update mutation
         // --- END NEW ARGS ---
     },
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated");
         }
         const form = await ctx.db
             .query("forms")
@@ -71,7 +74,7 @@ export const update = mutation({
             ))
             .unique();
         if (!form) {
-            throw new Error("Form not found");
+            throw new ConvexError("Form not found or you don't have permission");
         }
 
         // Slug uniqueness check (keep existing)
@@ -91,7 +94,7 @@ export const update = mutation({
         const sameNameForms = formsOfThisUser.filter((f) => f.name === args.name.trim());
 
         if (sameNameForms.length > 0 && sameNameForms[0]._id !== args.formId) {
-            throw new ConvexError("Form with this name already exists");
+            throw new ConvexError("Form with this name already exists for this user"); // More specific error
         }
 
         // --- NEW VALIDATION ---
@@ -113,11 +116,9 @@ export const update = mutation({
                 startTime: args.startTime,
                 endTime: args.endTime,
                 timeLimitMinutes: args.timeLimitMinutes,
+                // Do NOT update generationStatus here
                 // --- END PATCH NEW FIELDS ---
             });
-        // Maybe: Re-evaluate `acceptingResponses` based on new times?
-        // It's simpler to let the check happen during submission or have a separate toggle.
-        // Let's stick with the manual toggle for now.
     },
 });
 
@@ -129,7 +130,7 @@ export const toggleStatus = mutation({
     handler: async (ctx, args) => {
          const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated");
         }
         const form = await ctx.db
             .query("forms")
@@ -139,7 +140,7 @@ export const toggleStatus = mutation({
             ))
             .unique();
         if (!form) {
-            throw new Error("Form not found or you don't have permission");
+            throw new ConvexError("Form not found or you don't have permission");
         }
 
         // Toggle the status
@@ -161,7 +162,7 @@ export const deleteForm = mutation({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated");
         }
         const form = await ctx.db
             .query("forms")
@@ -171,7 +172,7 @@ export const deleteForm = mutation({
             ))
             .unique();
         if (!form) {
-            throw new Error("Form not found");
+            throw new ConvexError("Form not found or you don't have permission");
         }
         const formResponses = await ctx.db
             .query("form_responses")
@@ -185,6 +186,8 @@ export const deleteForm = mutation({
         await ctx.db.delete(args.formId);
     },
 });
+
+// Make 'get' query public so frontend can fetch form details including generationStatus
 export const get = query({
     args: {
         formId: v.id("forms"),
@@ -195,9 +198,13 @@ export const get = query({
             .filter((q) => q.eq(q.field("_id"), args.formId))
             .unique();
         if (!form) {
-            throw new Error("Form not found");
+            // Don't throw ConvexError directly here if it's a public query for non-authenticated users
+            // Depending on app design, maybe return null or a limited view if not authenticated?
+            // For simplicity, let's assume this query might be used in contexts where the form exists but user might not be owner.
+            // To check ownership, the client would need to compare fetched form.createdBy with auth.subject
+            return form; // Returns form or null
         }
-        return form;
+         return form;
     },
 });
 export const getBySlug = query({
@@ -210,16 +217,19 @@ export const getBySlug = query({
             .filter((q) => q.eq(q.field("slug"), args.slug))
             .unique();
         if (!form) {
-            throw new Error("Form not found");
+            throw new ConvexError("Form not found");
         }
+        // No auth check here, intended for public access to view form structure/status
         return form;
     },
 });
 export const getUserForms = query({
-    handler: async (ctx, args) => {
+    handler: async (ctx) => { // Removed args as they weren't used
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            // Return empty array or throw error depending on desired behavior for unauthenticated users
+            // Returning empty array is often better for UI
+            return [];
         }
         return ctx.db
             .query("forms")
@@ -227,6 +237,8 @@ export const getUserForms = query({
             .collect();
     },
 });
+
+// Keep internal for actions that need form data without full auth checks (action does auth)
 export const getFormForOwner = internalQuery({
     args: { formId: v.id("forms") },
     handler: async (ctx, args) => {

@@ -49,7 +49,7 @@ const HowItWorks = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold mb-4">
-              How <span className="gradient-text">Quiz Genie Reports</span> Works
+              How <span className="gradient-text">VidhaRith</span> Works
             </h2>
             <p className="text-lg text-muted-foreground mb-10">
               Our straightforward process helps you gain valuable insights about your students' understanding in just a few easy steps.

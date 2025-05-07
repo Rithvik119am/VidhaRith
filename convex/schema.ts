@@ -14,6 +14,7 @@ export default defineSchema({
         acceptingResponses: v.boolean(), // Explicitly track if accepting responses (manual override)
         timeLimitMinutes: v.optional(v.int64()), // Optional time limit in minutes
         // --- END NEW FIELDS ---
+        generationStatus: v.union(v.literal("not generating"), v.literal("generating")),
       }).index("by_slug", ["slug"]),
     form_responses: defineTable({
       formId: v.id("forms"),

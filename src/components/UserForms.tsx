@@ -118,7 +118,7 @@ export default function UserForms() {
             </div>
         );
     }
-
+ 
     return (
         <div className="container mx-auto py-8 space-y-6">
             <Unauthenticated>
@@ -162,13 +162,14 @@ export default function UserForms() {
 
                                         {/* Right side: Actions (Delete Button) */}
                                         {/* flex-shrink-0 prevents the button area from shrinking */}
-                                        <div className="flex-shrink-0">
+                                        <div className="flex-shrink-0 ">
                                             {/* Delete Button wrapped in AlertDialog Trigger */}
                                             {/* Bind the AlertDialog open state to deletingFormId */}
                                              <AlertDialog
                                                 open={deletingFormId === form._id}
                                                  // When the dialog's open state changes (e.g., closed by clicking outside),
                                                  // if it's closing, reset the deletingFormId.
+                                                
                                                 onOpenChange={(isOpen) => !isOpen && setDeletingFormId(null)}
                                              >
                                                 <AlertDialogTrigger asChild>
@@ -184,7 +185,8 @@ export default function UserForms() {
                                                 </AlertDialogTrigger>
                                                 {/* AlertDialogContent is conditionally rendered based on the 'open' prop */}
                                                 {/* It automatically has access to the deletingFormId state */}
-                                                <AlertDialogContent>
+                                                <AlertDialogContent
+                                                >
                                                     <AlertDialogHeader>
                                                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                                         <AlertDialogDescription>

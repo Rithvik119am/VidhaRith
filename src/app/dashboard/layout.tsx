@@ -31,7 +31,7 @@ export default function DashboardLayout({
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
       {/* Mobile header */}
       <div className="flex items-center justify-between bg-white border-b border-gray-200 p-4">
-        <span className="text-lg font-semibold text-gray-800">Dashboard</span>
+        <Link href="/dashboard/forms" className="text-lg font-semibold text-gray-800">Dashboard</Link>
 
         <div className="flex items-center space-x-2 lg:hidden">
           {/* Sidebar Toggle Button */}

@@ -202,7 +202,7 @@ export default function UserFiles() {
   // --- Render Logic ---
 
     return (
-        <div className="space-y-6">
+        <div className="container mx-auto py-8 space-y-6">
              <h2 className="text-2xl font-bold">Your Files</h2>
 
              {/* Upload Section */}

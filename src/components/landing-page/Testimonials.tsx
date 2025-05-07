@@ -39,7 +39,7 @@ const Testimonial = ({ quote, name, title, image, className }: TestimonialProps)
 const Testimonials = () => {
   const testimonials = [
     {
-      quote: "Quiz Genie Reports has transformed how I identify gaps in my students' understanding. The insights are incredibly valuable for adjusting my teaching strategies.",
+      quote: "VidhaRith has transformed how I identify gaps in my students' understanding. The insights are incredibly valuable for adjusting my teaching strategies.",
       name: "Sarah Johnson",
       title: "High School Science Teacher"
     },
@@ -49,7 +49,7 @@ const Testimonials = () => {
       title: "University Professor"
     },
     {
-      quote: "I've seen significant improvement in my students' test scores since implementing Quiz Genie Reports. The targeted teaching based on quiz results has been a game-changer.",
+      quote: "I've seen significant improvement in my students' test scores since implementing VidhaRith. The targeted teaching based on quiz results has been a game-changer.",
       name: "Jessica Rodriguez",
       title: "Middle School Math Teacher"
     }
@@ -63,7 +63,7 @@ const Testimonials = () => {
             What Educators Are <span className="gradient-text">Saying</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Join hundreds of educators who have transformed their teaching approach with Quiz Genie Reports.
+            Join hundreds of educators who have transformed their teaching approach with VidhaRith.
           </p>
         </div>
 
@@ -74,8 +74,7 @@ const Testimonials = () => {
               quote={testimonial.quote}
               name={testimonial.name}
               title={testimonial.title}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className={`animate-fade-in [animation-delay:${index * 0.1}s]`}
             />
           ))}
         </div>
