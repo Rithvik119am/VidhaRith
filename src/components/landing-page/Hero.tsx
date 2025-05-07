@@ -18,8 +18,8 @@ const Hero = () => {
               Get detailed reports to discover what students struggle with and optimize your teaching focus.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <CTAButton variant="primary" size="lg">Get Started For Free</CTAButton>
-              <CTAButton variant="outline" size="lg">See How It Works</CTAButton>
+              <CTAButton variant="primary" size="lg" onClick={() => window.location.href = "/sign-in"}>Get Started For Free</CTAButton>
+              <CTAButton variant="outline" size="lg" onClick={() => window.location.href = "#how-it-works"}>See How It Works</CTAButton>
             </div>
           </div>
           <div className="flex-1 relative">
