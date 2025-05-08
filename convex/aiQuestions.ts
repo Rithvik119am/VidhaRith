@@ -200,6 +200,7 @@ Based *solely* on the content of the provided file **${fileRecord.name}**, gener
 * Do **not** include any introductory text, explanations, or markdown.
 * Ensure questions are moderately complex and require a thoughtful understanding of the material.
 * Cover a diverse range of concepts within the file.
+* Try to randomize the location of the correct answer among the options.
 
 Each question must be a JSON object with the following structure:
 

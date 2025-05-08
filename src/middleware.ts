@@ -19,7 +19,10 @@ export default clerkMiddleware(async (auth, req) => {
     //move the user to /dashboard/forms
     return Response.redirect(new URL('/dashboard/forms', req.url))
   }
-  
+  if (userId && (req.nextUrl.pathname === '/sign-in')) {
+    //move the user to /dashboard/forms
+    return Response.redirect(new URL('/dashboard/forms', req.url))
+  }
 })
 
 export const config = {

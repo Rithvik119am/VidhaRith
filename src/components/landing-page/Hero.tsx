@@ -1,6 +1,7 @@
 
 import CTAButton from "./CTAButton";
 import Image from "next/image"
+import { Authenticated, Unauthenticated } from "convex/react";
 const Hero = () => {
   return (
     <section className="pt-28 pb-20 md:pt-40 md:pb-32 bg-gradient-to-b from-white to-quiz-light">
@@ -18,7 +19,12 @@ const Hero = () => {
               Get detailed reports to discover what students struggle with and optimize your teaching focus.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <Unauthenticated>
               <CTAButton variant="primary" size="lg" onClick={() => window.location.href = "/sign-in"}>Get Started For Free</CTAButton>
+              </Unauthenticated>
+              <Authenticated>
+              <CTAButton variant="primary" size="lg" onClick={() => window.location.href = "/dashboard/forms"}>Dashboard</CTAButton>
+              </Authenticated>
               <CTAButton variant="outline" size="lg" onClick={() => window.location.href = "#how-it-works"}>See How It Works</CTAButton>
             </div>
           </div>
