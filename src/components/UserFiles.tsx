@@ -94,6 +94,9 @@ export default function UserFiles() {
     setIsUploading(true);
     try {
       const postUrl = await generateUploadUrl();
+      if (typeof postUrl !=="string"){
+        throw new Error(postUrl.error)
+      }
       
 
       const result = await fetch(postUrl, {
@@ -114,11 +117,14 @@ export default function UserFiles() {
            throw new Error("Upload completed but failed to get storage ID.");
       }
 
-      await sendFile({
+      const status=await sendFile({
         storageId,
         name: selectedFile.name,
         type: selectedFile.type,
       });
+      if (status.error) {
+        throw new Error(`Failed to save file metadata: ${status.error}`);
+      }
 
       toast.success(`"${selectedFile.name}" uploaded successfully!`);
       setSelectedFile(null);

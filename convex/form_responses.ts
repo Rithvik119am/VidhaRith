@@ -1,7 +1,6 @@
 // convex/form_responses.ts
 import { mutation, query, internalQuery } from './_generated/server';
-import { v } from "convex/values";
-import { ConvexError } from 'convex/values';
+import { v,ConvexError } from "convex/values";
 
 export const addResponse = mutation({
     args: {
@@ -22,7 +21,7 @@ export const addResponse = mutation({
             .unique();
 
         if (!form) {
-            throw new Error("Form not found");
+            throw new ConvexError("Form not found");
         }
 
         const now = Date.now(); // Get current time once
@@ -63,18 +62,56 @@ export const addResponse = mutation({
         }
         // --- END NEW CHECKS ---
 
-        // If all checks pass, insert the response
+   // --- Fetch Questions for Scoring ---
+   const questions = await ctx.db
+   .query("form_questions")
+   .withIndex("by_formId", q => q.eq("formId", form._id))
+   .collect();
+
+        // Create a map for quick lookup of correct answers by questionId
+        const questionMap = new Map(questions.map(q => [q._id.toString(), q]));
+
+        // --- Calculate Score ---
+        let correctCount = 0;
+        // Only iterate through the submitted answers, matching them to existing questions
+        for (const userAnswer of args.values) {
+        const question = questionMap.get(userAnswer.questionId.toString());
+
+        // Ensure the submitted questionId corresponds to a question in this form
+        if (question) {
+            // Compare user's answer to the correct answer (trim and case-insensitive for robustness)
+            const trimmedUserAnswer = userAnswer.userSelectedOption.trim().toLowerCase();
+            const trimmedCorrectAnswer = question.answer.trim().toLowerCase();
+
+            if (trimmedUserAnswer === trimmedCorrectAnswer) {
+                correctCount++;
+            }
+        } else {
+            // Optional: Log a warning if a submitted questionId doesn't match any question
+            console.warn(`Submitted response includes unknown questionId: ${userAnswer.questionId}`);
+        }
+        }
+
+        // Calculate the score as a fraction (correct answers / total questions in the form)
+        // Handle the case where the form has no questions to avoid division by zero
+        const totalPossibleQuestions = questions.length;
+        // for percentage //const calculatedScore = (totalPossibleQuestions === 0) ? 0 : correctCount / totalPossibleQuestions;
+        const calculatedScore = (totalPossibleQuestions === 0) ? 0 : correctCount;
+        // --- End Score Calculation ---
+
+
+        // If all checks pass, insert the response with the calculated score
         const response = {
-            formId: form._id,
-            slug: args.slug, // Keep slug if needed, though formId is primary link
-            values: args.values,
-            // --- ADD TIMESTAMPS ---
-            submittedAt: BigInt(now),
-            sessionStartTime: args.sessionStartTime, // Store the start time for reference/analysis
+        formId: form._id,
+        slug: args.slug, // Keep slug if needed, though formId is primary link
+        values: args.values,
+        score: calculatedScore, // Store the calculated score
+        submittedAt: BigInt(now),
+        sessionStartTime: args.sessionStartTime,
         };
         const responseId = await ctx.db.insert("form_responses", response);
         return responseId;
-    },
+        },
 });
 
 export const getFormResponses = query({
@@ -84,7 +121,7 @@ export const getFormResponses = query({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated");
         }
         const form = await ctx.db
             .query("forms")
@@ -94,7 +131,7 @@ export const getFormResponses = query({
             ))
             .unique();
         if (!form) {
-            throw new Error("Form not found");
+            throw new ConvexError("Form not found");
         }
         return ctx.db
             .query("form_responses")

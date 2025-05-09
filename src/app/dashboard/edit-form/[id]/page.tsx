@@ -1,5 +1,3 @@
-// --- START OF FILE page.tsx ---
-
 "use client";
 import { Authenticated, Unauthenticated } from 'convex/react';
 import { Id } from '../../../../../convex/_generated/dataModel';
@@ -10,43 +8,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FormDetails from "./FormDetails";
 import FormQuestions from "./FormQuestions";
 import FormResponses from './FormResponses';
-import FormAnalysis from './FormAnalysis'; // <-- Import the new component
+import FormAnalysis from './FormAnalysis';
 
 export default function Page({ params }: { params: { id: Id<"forms"> } }) {
 
   const formId = params.id;
-  
 
   return (
-    <div className="container mx-auto py-8"> {/* Add container and padding */}
+    <div className="container mx-auto py-8">
       <Unauthenticated>
         <div className="text-center text-lg">Please sign in to manage forms.</div>
       </Unauthenticated>
       <Authenticated>
-        {/* Use Tabs component */}
-        <Tabs defaultValue="details_questions" className="w-full"> {/* Set a default tab */}
-          {/* --- Updated TabsList to include Analysis --- */}
-          <TabsList className="grid w-full grid-cols-3 mx-auto mb-6 md:w-[500px]"> {/* Changed grid-cols-3 */}
+        {/* Tabs component and triggers use the theme colors automatically */}
+        <Tabs defaultValue="details_questions" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mx-auto mb-6 md:w-[500px]">
             <TabsTrigger value="details_questions">Form Settings</TabsTrigger>
             <TabsTrigger value="responses">Responses</TabsTrigger>
-            <TabsTrigger value="analysis">Analysis</TabsTrigger> {/* <-- Added Analysis Trigger */}
+            <TabsTrigger value="analysis">Analysis</TabsTrigger>
           </TabsList>
 
-          {/* Content for Details & Questions Tab */}
-          <TabsContent value="details_questions" className="space-y-8"> {/* Add spacing between sections */}
+          <TabsContent value="details_questions" className="space-y-8">
             <FormDetails id={formId} />
-            {/* No need for <hr> with spacing */}
             <FormQuestions formId={formId} />
           </TabsContent>
 
-          {/* Content for Responses Tab */}
           <TabsContent value="responses">
             <FormResponses formId={formId} />
           </TabsContent>
 
-          {/* --- Content for Analysis Tab --- */}
           <TabsContent value="analysis">
-            <FormAnalysis formId={formId} /> {/* <-- Added Analysis Content */}
+            <FormAnalysis formId={formId} />
           </TabsContent>
 
         </Tabs>
@@ -54,4 +46,3 @@ export default function Page({ params }: { params: { id: Id<"forms"> } }) {
     </div>
   );
 }
-// --- END OF FILE page.tsx ---

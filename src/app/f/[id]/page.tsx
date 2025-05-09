@@ -302,7 +302,7 @@ export default function Page({ params }: { params: { id: string } }) {
   // 5. No Questions Available
   if (questions && questions.length === 0) {
     return (
-      <div className="container mx-auto p-4 md:p-8 max-w-2xl bg-white rounded-lg shadow-sm">
+      <div className="container mx-auto p-4 md:p-8 max-w-2xl rounded-lg shadow-sm">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3">
           {formDetails.name || slug}
         </h1>
@@ -363,7 +363,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
   // 9. Render the Active Form (Only if none of the above conditions are met)
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-2xl bg-white rounded-lg shadow-md">
+    <div className="container mx-auto p-4 md:p-8 max-w-2xl rounded-lg shadow-md">
       {/* Form Header */}
       <div className="mb-6 border-b pb-4">
         <h1 className="text-2xl md:text-3xl font-bold mb-2">{formDetails.name || slug}</h1>
@@ -487,7 +487,7 @@ function FormSkeleton({
   count?: number;
 }) {
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-2xl bg-white rounded-lg shadow-md animate-pulse">
+    <div className="container mx-auto p-4 md:p-8 max-w-2xl  rounded-lg shadow-md animate-pulse">
       {/* Header Skeleton */}
       <div className="mb-6 border-b pb-4">
         {title ? <h1 className="text-2xl md:text-3xl font-bold mb-2">{title}</h1> : <Skeleton className="h-8 w-3/4 mb-2" />}

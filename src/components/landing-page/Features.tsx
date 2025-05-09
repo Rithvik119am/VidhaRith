@@ -12,7 +12,7 @@ interface FeatureCardProps {
 
 const FeatureCard = ({ icon, title, description, className }: FeatureCardProps) => (
   <div className={cn(
-    "bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-border",
+    " p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-border",
     className
   )}>
     <div className="w-12 h-12 flex items-center justify-center rounded-full bg-quiz-primary/10 mb-5">

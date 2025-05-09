@@ -1,5 +1,5 @@
 // convex/files.ts
-import { v } from "convex/values";
+import { v,ConvexError } from "convex/values";
 import {
   query,
   mutation, // Make sure mutation is imported
@@ -66,7 +66,7 @@ export const generateUploadUrl = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("User must be logged in to upload files.");
+      return {error:"User must be logged in to upload files."};
     }
   // Check how many files the user has uploaded
   const userFiles = await ctx.db
@@ -77,7 +77,7 @@ export const generateUploadUrl = mutation({
   const fileCount = userFiles.length;
   const MAX_NO_OF_FILES = 4;
   if (fileCount >= MAX_NO_OF_FILES) { // Adjust limit as needed
-    throw new Error("You have reached the maximum number of allowed files.");
+    return  { error: `You have reached the maximum number of ${MAX_NO_OF_FILES} files.` };
   }
     return await ctx.storage.generateUploadUrl();
   },
@@ -93,16 +93,16 @@ export const sendFile = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("User must be logged in to save files.");
+      return  { error:"User must be logged in to save files."};
     }
 
     const fileMetadata = await ctx.storage.getMetadata(args.storageId);
      if (!fileMetadata) {
-        throw new Error("File metadata not found for the provided storage ID.");
+        return  { error:"File metadata not found for the provided storage ID."};
      }
     if (fileMetadata.size > MAX_FILE_SIZE_BYTES) {
         await ctx.storage.delete(args.storageId); // Clean up the large file
-        throw new Error(`File size exceeds the limit of ${MAX_FILE_SIZE_MB} MB.`);
+        return  { error:`File size exceeds the limit of ${MAX_FILE_SIZE_MB} MB.`};
     }
 
     await ctx.scheduler.runAfter(0, internal.files.saveFileMetadata, {
@@ -147,16 +147,16 @@ export const getUserFiles = query({
 //     handler: async (ctx, args) => {
 //         const identity = await ctx.auth.getUserIdentity();
 //         if (!identity) {
-//             throw new Error("User must be logged in to download files.");
+//             throw new ConvexError("User must be logged in to download files.");
 //         }
 //         // Optional: Add authorization check here if needed.
 //         // const fileRecord = await ctx.db.query("files").withIndex("by_storageId", q => q.eq("storageId", args.storageId)).first();
 //         // if (!fileRecord || fileRecord.userId !== identity.subject) {
-//         //      throw new Error("Not authorized to access this file.");
+//         //      throw new ConvexError("Not authorized to access this file.");
 //         // }
 //         const url = await ctx.storage.getUrl(args.storageId);
 //         if (!url) {
-//             throw new Error("Could not retrieve file URL.");
+//             throw new ConvexError("Could not retrieve file URL.");
 //         }
 //         return url;
 //     },
@@ -169,19 +169,19 @@ export const getDownloadUrl = mutation({ // Define as mutation
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
-            throw new Error("User must be logged in to download files.");
+            throw new ConvexError("User must be logged in to download files.");
         }
 
         // 1. Get the file record from the database to get storageId and verify ownership
         const fileRecord = await ctx.db.get(args.fileId);
 
         if (!fileRecord) {
-            throw new Error("File not found.");
+            throw new ConvexError("File not found.");
         }
 
         // 2. Check if the logged-in user owns this file (Authorization)
         if (fileRecord.userId !== identity.subject) {
-             throw new Error("Not authorized to download this file.");
+             throw new ConvexError("Not authorized to download this file.");
         }
 
         // 3. Get the temporary download URL using the storageId
@@ -189,7 +189,7 @@ export const getDownloadUrl = mutation({ // Define as mutation
 
         if (!url) {
             // This could happen if the storageId is invalid or the file was somehow deleted from storage
-            throw new Error("Could not retrieve file URL from storage.");
+            throw new ConvexError("Could not retrieve file URL from storage.");
         }
 
         // Return the URL
@@ -204,17 +204,17 @@ export const deleteFile = mutation({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
-            throw new Error("User must be logged in to delete files.");
+            throw new ConvexError("User must be logged in to delete files.");
         }
 
         const fileRecord = await ctx.db.get(args.fileId);
 
         if (!fileRecord) {
-            throw new Error("File not found.");
+            throw new ConvexError("File not found.");
         }
 
         if (fileRecord.userId !== identity.subject) {
-            throw new Error("User is not authorized to delete this file.");
+            throw new ConvexError("User is not authorized to delete this file.");
         }
 
         await ctx.storage.delete(fileRecord.storageId);

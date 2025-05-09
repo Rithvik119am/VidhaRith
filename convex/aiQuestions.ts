@@ -1,5 +1,5 @@
 // convex/aiQuestions.ts
-import { v } from "convex/values";
+import { v,ConvexError } from "convex/values";
 import { action, internalMutation, internalQuery } from "./_generated/server"; // Added internalQuery
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
@@ -31,10 +31,10 @@ export const internal_addGeneratedQuestions = internalMutation({
     handler: async (ctx, args) => {
         const form = await ctx.db.get(args.formId);
         if (!form) {
-            throw new Error("Target form not found.");
+            throw new ConvexError("Target form not found.");
         }
         if (form.createdBy !== args.userId) {
-             throw new Error("User mismatch - cannot add questions to this form.");
+             throw new ConvexError("User mismatch - cannot add questions to this form.");
         }
 
         const existingQuestions = await ctx.db
@@ -59,7 +59,7 @@ export const internal_addGeneratedQuestions = internalMutation({
 
         if (validQuestions.length === 0 && args.generatedQuestions.length > 0) {
              console.error("All questions received from LLM were invalid.", args.generatedQuestions);
-             throw new Error("LLM response parsed, but contained no valid questions meeting the criteria.");
+             throw new ConvexError("LLM response parsed, but contained no valid questions meeting the criteria.");
          }
 
         for (const q of validQuestions) {
@@ -112,27 +112,27 @@ export const generateQuestions = action({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
-            throw new Error("User must be logged in to generate questions.");
+            throw new ConvexError("User must be logged in to generate questions.");
         }
         await rateLimiter.check(ctx, "generateQuestions", { key: identity.subject ,throws: true});
 
         const form = await ctx.runQuery(internal.forms.getFormForOwner, { formId: args.formId });
          if (!form || form.createdBy !== identity.subject) {
-             throw new Error("Form not found or you don't have permission to generate questions for it.");
+             throw new ConvexError("Form not found or you don't have permission to generate questions for it.");
          }
 
         // Check if generation is already in progress
         if (form.generationStatus === "generating") {
-             throw new Error("Question generation is already in progress for this form.");
+             throw new ConvexError("Question generation is already in progress for this form.");
         }
 
         // 1. Validate number of questions
         if (args.numberOfQuestions <= 0 || !Number.isInteger(args.numberOfQuestions)) {
-             throw new Error("Number of questions must be a positive integer.");
+             throw new ConvexError("Number of questions must be a positive integer.");
         }
         const MAX_QUESTIONS = 50;
         if (args.numberOfQuestions > MAX_QUESTIONS) {
-            throw new Error(`Cannot generate more than ${MAX_QUESTIONS} questions at a time.`);
+            throw new ConvexError(`Cannot generate more than ${MAX_QUESTIONS} questions at a time.`);
         }
 
         // --- Set status to 'generating' ---
@@ -148,10 +148,10 @@ export const generateQuestions = action({
             // 2. Authorize access & Get File Record
             const fileRecord = await ctx.runQuery(internal.files.getFileRecordByStorageId, { storageId: args.fileStorageId });
             if (!fileRecord) {
-                 throw new Error("File not found.");
+                 throw new ConvexError("File not found.");
             }
             if (fileRecord.userId !== identity.subject) {
-                 throw new Error("User is not authorized to use this file.");
+                 throw new ConvexError("User is not authorized to use this file.");
             }
 
             // --- Check file MIME type (Important for Gemini) ---
@@ -166,20 +166,20 @@ export const generateQuestions = action({
              if (!fileRecord.type || !supportedMimeTypes.includes(fileRecord.type)) {
                  console.warn(`File type "${fileRecord.type}" might not be directly processable by the AI or optimally supported. Results may vary.`);
                  // Consider throwing an error for definitely incompatible types if needed.
-                 // throw new Error(`Unsupported file type: ${fileRecord.type}.`);
+                 // throw new ConvexError(`Unsupported file type: ${fileRecord.type}.`);
              }
 
             // 3. Get the file content from storage as ArrayBuffer
             const fileBlob = await ctx.storage.get(args.fileStorageId);
             if (!fileBlob) {
-                throw new Error("Could not retrieve file content from storage.");
+                throw new ConvexError("Could not retrieve file content from storage.");
             }
             const fileArrayBuffer = await fileBlob.arrayBuffer(); // Get the ArrayBuffer
             // --- Google API Key Check (Using the standard env var for @ai-sdk/google) ---
             const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
             if (!apiKey) {
                 console.error("Missing GOOGLE_GENERATIVE_AI_API_KEY environment variable in Convex deployment.");
-                throw new Error("AI Service configuration error. Please contact support."); // User-friendly error
+                throw new ConvexError("AI Service configuration error. Please contact support."); // User-friendly error
             }
             // NOTE: The key is not passed directly to google() but used implicitly by the provider.
 
@@ -272,7 +272,7 @@ Each question must be a JSON object with the following structure:
                     console.error("Failed to parse LLM response as JSON:", error);
                     console.error("Cleaned LLM Response Text for parsing:", cleanedText);
                     // Throw a user-friendly error indicating parsing failed
-                    throw new Error(`Failed to process AI response. Could not understand the generated questions (Finish Reason: ${result.finishReason}). Please try again or adjust parameters. Response snippet: ${cleanedText.substring(0, 200)}...`);
+                    throw new ConvexError(`Failed to process AI response. Could not understand the generated questions (Finish Reason: ${result.finishReason}). Please try again or adjust parameters. Response snippet: ${cleanedText.substring(0, 200)}...`);
                 }
 
                 console.log("Parsed LLM Response (initial):", generatedQuestions);
@@ -280,11 +280,11 @@ Each question must be a JSON object with the following structure:
                 // 5. Validate array structure (basic check)
                 if (!Array.isArray(generatedQuestions)) {
                      console.error("Parsed LLM response is not an array:", generatedQuestions);
-                     throw new Error("AI did not return a valid list of questions.");
+                     throw new ConvexError("AI did not return a valid list of questions.");
                 }
                 if (generatedQuestions.length === 0 && args.numberOfQuestions > 0) {
                      console.warn("LLM returned an empty array of questions.");
-                     throw new Error("AI returned an empty list. No questions were generated from the file.");
+                     throw new ConvexError("AI returned an empty list. No questions were generated from the file.");
                 }
 
                 // 6. Schedule internal mutation
@@ -304,20 +304,20 @@ Each question must be a JSON object with the following structure:
                  console.error("Vercel AI SDK v3 / LLM API call failed:", error);
                  // Add more specific error handling if needed (e.g., check error.cause or specific error types from the SDK)
                  if (error.message?.includes("API key") || error.message?.includes("PERMISSION_DENIED") || error.message?.includes("INVALID_API_KEY")) {
-                    throw new Error("Invalid or missing GOOGLE_GENERATIVE_AI_API_KEY, or it lacks permissions for the Gemini API. Check your environment variable.");
+                    throw new ConvexError("Invalid or missing GOOGLE_GENERATIVE_AI_API_KEY, or it lacks permissions for the Gemini API. Check your environment variable.");
                  }
                   // Check the error structure provided by the SDK/underlying fetch call
                   if (error.cause && typeof error.cause === 'object' && 'status' in error.cause && error.cause.status === 429) {
-                      throw new Error("Rate limit exceeded when calling the AI model. Please try again later.");
+                      throw new ConvexError("Rate limit exceeded when calling the AI model. Please try again later.");
                   } else if (error.cause && typeof error.cause === 'object' && 'status' in error.cause && error.cause.status >= 400 && error.cause.status < 500) {
                        console.error(`Client-side error (${error.cause.status}) from LLM:`, error.cause);
-                       throw new Error(`AI model received a bad request (Status ${error.cause.status}). Check file format or prompt complexity. Error detail: ${error.cause.message || 'No detail provided'}`);
+                       throw new ConvexError(`AI model received a bad request (Status ${error.cause.status}). Check file format or prompt complexity. Error detail: ${error.cause.message || 'No detail provided'}`);
                   } else if (error.cause && typeof error.cause === 'object' && 'status' in error.cause && error.cause.status >= 500) {
                        console.error(`Server-side error (${error.cause.status}) from LLM:`, error.cause);
-                       throw new Error(`AI model service is currently experiencing issues (Status ${error.cause.status}). Please try again later. Error detail: ${error.cause.message || 'No detail provided'}`);
+                       throw new ConvexError(`AI model service is currently experiencing issues (Status ${error.cause.status}). Please try again later. Error detail: ${error.cause.message || 'No detail provided'}`);
                   }
                  // Catch-all for other errors
-                 throw new Error(`Failed to generate questions via AI: ${error.message || String(error)}`);
+                 throw new ConvexError(`Failed to generate questions via AI: ${error.message || String(error)}`);
             } finally {
                  // --- Reset status to 'not generating' ---
                  // This runs whether the try block succeeded or failed

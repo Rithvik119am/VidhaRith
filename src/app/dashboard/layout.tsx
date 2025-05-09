@@ -28,9 +28,9 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
+    <div className="flex flex-col min-h-[calc(100dvh-68px)]  mx-auto w-full">
       {/* Mobile header */}
-      <div className="flex items-center justify-between bg-white border-b border-gray-200 p-4">
+      <div className="flex items-center justify-between  border-b border-gray-200 p-4">
         <Link href="/dashboard/forms" className="text-lg font-semibold text-gray-800">Dashboard</Link>
 
         <div className="flex items-center space-x-2 lg:hidden">
@@ -56,7 +56,7 @@ export default function DashboardLayout({
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <aside
-          className={`w-64 bg-white lg:bg-gray-50 border-r border-gray-200 lg:block ${
+          className={`w-64  lg:bg-gray-50 border-r border-gray-200 lg:block ${
             isSidebarOpen ? 'block' : 'hidden'
           } lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -90,7 +90,7 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main content className="container flex-grow mx-auto m-2" */}
-        <main className="flex-1 overflow-y-auto p-0 lg:p-6 bg-white">{children}</main>
+        <main className="flex-1 overflow-y-auto p-0 bg-background lg:p-6">{children}</main>
       </div>
     </div>
   );

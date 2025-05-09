@@ -1,6 +1,6 @@
 // convex/form_questions.ts
 import { mutation, query, internalQuery } from './_generated/server';
-import { v } from "convex/values";
+import { v,ConvexError } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
 // --- Add Question Mutation (exists) ---
@@ -16,30 +16,30 @@ export const addQuestion = mutation({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated");
         }
 
         // 1. Authorize: Check if user owns the form
         const form = await ctx.db.get(args.formId);
 
         if (!form) {
-            throw new Error("Form not found");
+            throw new ConvexError("Form not found");
         }
         if (form.createdBy !== identity.subject) {
-             throw new Error("User does not have permission to add questions to this form");
+             throw new ConvexError("User does not have permission to add questions to this form");
         }
 
         // 2. Validate: Check if answer is one of the options
         if (!args.selectOptions.includes(args.answer.trim())) { // Add trim here too for consistency
-            throw new Error("The provided answer must be one of the select options.");
+            throw new ConvexError("The provided answer must be one of the select options.");
         }
          if (args.selectOptions.map(opt => opt.trim()).filter(opt => opt !== "").length < 2) { // Validate trimmed options length
-            throw new Error("MCQ questions must have at least two non-empty options.");
+            throw new ConvexError("MCQ questions must have at least two non-empty options.");
          }
          // Validate unique options (case-insensitive, trimmed)
          const trimmedOptions = args.selectOptions.map(opt => opt.trim().toLowerCase()).filter(opt => opt !== "");
          if (new Set(trimmedOptions).size !== trimmedOptions.length) {
-             throw new Error("Options must be unique and not empty.");
+             throw new ConvexError("Options must be unique and not empty.");
          }
 
 
@@ -70,23 +70,23 @@ export const updateQuestion = mutation({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated");
         }
 
         // 1. Fetch the question to be updated
         const question = await ctx.db.get(args.questionInternalId);
         if (!question) {
-            throw new Error("Question not found");
+            throw new ConvexError("Question not found");
         }
 
         // 2. Authorize: Check if user owns the associated form
         const form = await ctx.db.get(question.formId);
         if (!form) {
              // Should not happen if question exists, but good practice
-            throw new Error("Associated form not found");
+            throw new ConvexError("Associated form not found");
         }
         if (form.createdBy !== identity.subject) {
-            throw new Error("User does not have permission to update this question");
+            throw new ConvexError("User does not have permission to update this question");
         }
 
         // 3. Validate: Check if answer is one of the NEW options
@@ -94,15 +94,15 @@ export const updateQuestion = mutation({
         const trimmedNewAnswer = args.answer.trim();
 
         if (!trimmedNewOptions.includes(trimmedNewAnswer)) {
-            throw new Error("The provided answer must exactly match one of the new select options (case-insensitive and trimmed).");
+            throw new ConvexError("The provided answer must exactly match one of the new select options (case-insensitive and trimmed).");
         }
         if (trimmedNewOptions.filter(opt => opt !== "").length < 2) { // Validate trimmed options length
-           throw new Error("MCQ questions must have at least two non-empty options.");
+           throw new ConvexError("MCQ questions must have at least two non-empty options.");
         }
         // Validate unique options (case-insensitive, trimmed)
         const lowerTrimmedOptions = trimmedNewOptions.map(opt => opt.toLowerCase()).filter(opt => opt !== "");
         if (new Set(lowerTrimmedOptions).size !== lowerTrimmedOptions.length) {
-            throw new Error("Options must be unique and not empty.");
+            throw new ConvexError("Options must be unique and not empty.");
         }
 
 
@@ -126,7 +126,7 @@ export const deleteQuestion = mutation({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            throw new Error("Not authenticated");
+            throw new ConvexError("Not authenticated");
         }
 
         // 1. Fetch the question to be deleted
@@ -139,10 +139,10 @@ export const deleteQuestion = mutation({
         // 2. Authorize: Check if user owns the associated form
         const form = await ctx.db.get(question.formId);
         if (!form) {
-            throw new Error("Associated form not found");
+            throw new ConvexError("Associated form not found");
         }
         if (form.createdBy !== identity.subject) {
-            throw new Error("User does not have permission to delete questions from this form");
+            throw new ConvexError("User does not have permission to delete questions from this form");
         }
 
         // 3. Delete the question

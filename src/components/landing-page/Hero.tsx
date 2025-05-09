@@ -29,7 +29,7 @@ const Hero = () => {
             </div>
           </div>
           <div className="flex-1 relative">
-            <div className="relative z-10 bg-white p-5 rounded-xl shadow-xl">
+            <div className="relative z-10  p-5 rounded-xl shadow-xl">
               <Image
                 src="/1.png"
                 alt="Quiz Genie Analytics Dashboard"
