@@ -1,4 +1,3 @@
-// FormQuestions.tsx
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -16,6 +15,16 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import AiQuestionGenerator from '@/components/AiQuestionGenerator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose, // Import DialogClose
+} from "@/components/ui/dialog"; // Import Dialog components
 
 const optionSchema = z.object({
   value: z.string().min(1, { message: "Option cannot be empty." })
@@ -47,6 +56,11 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<Id<"form_questions"> | null>(null);
   const editFormRef = useRef<HTMLDivElement>(null);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<Id<"form_questions"> | null>(null);
+   const [isDeleting, setIsDeleting] = useState(false);
+
 
   const form = useForm<FormSchemaValues>({
     resolver: zodResolver(formSchema),
@@ -195,21 +209,32 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
       }
   };
 
-  const handleDeleteQuestion = async (questionInternalId: Id<"form_questions">) => {
-     if (editingQuestionId === questionInternalId) {
-         handleCancelEdit();
-     }
+  // Function to initiate delete confirmation
+  const initiateDelete = (questionInternalId: Id<"form_questions">) => {
+      setQuestionToDelete(questionInternalId);
+      setShowDeleteConfirm(true);
+  };
 
-     if (!confirm("Are you sure you want to delete this question?")) {
-         return;
-     }
-     try {
-        await deleteQuestion({ questionInternalId });
-        toast.success("Question deleted successfully!");
-     } catch (error: any) {
-         console.error("Failed to delete question:", error);
-         toast.error(`Failed to delete question: ${error.data || error.message || error.toString()}`);
-     }
+  // Function to handle the actual deletion after confirmation
+  const handleConfirmDelete = async () => {
+      if (!questionToDelete) return;
+
+      setIsDeleting(true);
+      try {
+          await deleteQuestion({ questionInternalId: questionToDelete });
+          toast.success("Question deleted successfully!");
+          // If the deleted question was being edited, cancel the edit
+          if (editingQuestionId === questionToDelete) {
+              handleCancelEdit();
+          }
+      } catch (error: any) {
+          console.error("Failed to delete question:", error);
+          toast.error(`Failed to delete question: ${error.data || error.message || error.toString()}`);
+      } finally {
+          setIsDeleting(false);
+          setShowDeleteConfirm(false); // Close the dialog
+          setQuestionToDelete(null); // Clear the question to delete
+      }
   };
 
   const isAddMode = editingQuestionId === null;
@@ -290,16 +315,15 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
                             <Edit2 className="h-4 w-4" />
                           </Button>
                       )}
-
-                      <Button
+                      {/* Use a DialogTrigger button for delete */}
+                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteQuestion(q._id)}
+                        onClick={() => initiateDelete(q._id)} // Call initiateDelete on click
                         aria-label={`Delete question ${q.order}`}
                         title={`Delete question ${q.order}`}
                          disabled={editingQuestionId === q._id}
                       >
-                        {/* Using standard destructive color for delete icon */}
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>
@@ -445,6 +469,32 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
           </form>
         </Form>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this question? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+             <DialogClose asChild>
+                <Button variant="outline" disabled={isDeleting}>
+                 Cancel
+                </Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
