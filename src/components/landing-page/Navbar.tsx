@@ -86,9 +86,10 @@ const Navbar = () => {
             <a href="#how-it-works" className="text-foreground hover:text-quiz-primary transition-colors">
               How it Works
             </a>
-            <a href="#pricing" className="text-foreground hover:text-quiz-primary transition-colors">
+            {/*<a href="#pricing" className="text-foreground hover:text-quiz-primary transition-colors">
               Pricing
-            </a>
+            </a>*/}
+
             {/* Auth Buttons/Links - Styled as buttons */}
             <Unauthenticated>
               <a
@@ -153,13 +154,13 @@ const Navbar = () => {
           >
             How it Works
           </a>
-          <a
+          {/*<a
             href="#pricing"
             onClick={() => setMobileMenuOpen(false)}
             className="text-foreground hover:text-quiz-primary transition-colors py-2"
           >
             Pricing
-          </a>
+          </a>*/}
 
           {/* Auth Buttons/Links - Styled as buttons */}
           <Unauthenticated>
