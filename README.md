@@ -117,13 +117,13 @@ Vitharith is a modern, AI-powered quiz platform designed to help educators gain 
 ## 📊 Features in Action
 
 ### Quiz Creation
-![Quiz Creation Demo](/public/readme/quiz-creation.mp4)
+![Quiz Creation Demo](/public/readme/quiz-creation.gif)
 
 ### Real-time Analytics
 ![Analytics Dashboard](/public/readme/analytics.png)
 
 ### AI Question Generation
-![AI Question Generation](/public/readme/ai-question.mp4)
+![AI Question Generation](/public/readme/ai-question.png)
 
 ## 🤝 Contributing
 
