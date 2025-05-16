@@ -16,8 +16,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Assuming you have this
-import { Progress } from "@/components/ui/progress"; // Assuming you have this
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
+import { Progress } from "@/components/ui/progress"; 
 import { toast } from "sonner";
 import {
     AlertCircle,
@@ -29,18 +29,15 @@ import {
     TrendingUp,
     User,
     Users,
-    FileText, // For Response ID
-    HelpCircle, // For "Not available"
-    BarChart3, // For Analysis section title
+    FileText, 
+    HelpCircle, 
+    BarChart3, 
 } from "lucide-react";
 
-// Helper function to format percentage (no change needed)
 const formatPercentage = (value: number | undefined): string => {
     if (typeof value !== 'number' || isNaN(value)) return "N/A";
     return `${value.toFixed(1)}%`;
 };
-
-// --- Sub-Components for Better Structure ---
 
 interface PerformanceData {
     correct?: number;
@@ -77,11 +74,9 @@ interface FullAnalysisData {
     _id: Id<"form_responses_analysis">;
     formId: Id<"forms">;
     analysis?: AnalysisPayload | null;
-    // Add other fields from your analysis document if any
 }
 
 
-// Skeleton for loading state
 const AnalysisSkeletons = () => (
     <div className="space-y-6 mt-6">
         <Card>
@@ -119,7 +114,6 @@ const AnalysisSkeletons = () => (
     </div>
 );
 
-// Reusable Info Alert
 const InfoAlert = ({ title, description, icon }: { title: string, description: string, icon?: React.ReactNode }) => (
     <Alert variant="default" className="mt-6 bg-sky-50 border-sky-200 text-sky-700">
         {icon || <Info className="h-5 w-5 text-sky-600" />}
@@ -128,7 +122,6 @@ const InfoAlert = ({ title, description, icon }: { title: string, description: s
     </Alert>
 );
 
-// Performance Meter (Simple Text + Progress Bar)
 const PerformanceMeter = ({ correct, total, percentage, label = "Performance" }: { correct?: number, total?: number, percentage?: number, label?: string }) => {
     if (typeof correct !== 'number' || typeof total !== 'number' || typeof percentage !== 'number') {
         return <p className="text-sm text-muted-foreground italic">{label}: Data unavailable</p>;
@@ -147,7 +140,6 @@ const PerformanceMeter = ({ correct, total, percentage, label = "Performance" }:
 };
 
 
-// Card for Collective Analysis
 const CollectiveAnalysisCard = ({ analysis }: { analysis: CollectiveAnalysisData | undefined }) => {
     if (!analysis) {
         return (
@@ -211,7 +203,6 @@ const CollectiveAnalysisCard = ({ analysis }: { analysis: CollectiveAnalysisData
     );
 };
 
-// Card for Individual Analysis
 const IndividualAnalysisCard = ({ individualData }: { individualData: IndividualPerformanceData }) => {
     return (
         <Card className="shadow-lg border-purple-200 transform hover:scale-[1.01] transition-transform duration-300 ease-out">
@@ -264,9 +255,8 @@ const IndividualAnalysisCard = ({ individualData }: { individualData: Individual
     );
 };
 
-// Main Display for Analysis Data (using Tabs)
 const AnalysisDisplay = ({ analysisData }: { analysisData: FullAnalysisData | null | undefined }) => {
-    if (!analysisData?.analysis) { // If analysis object itself is null or undefined within analysisData
+    if (!analysisData?.analysis) { 
         return (
              <InfoAlert
                 title="Analysis Data Pending"
@@ -319,7 +309,6 @@ const AnalysisDisplay = ({ analysisData }: { analysisData: FullAnalysisData | nu
 };
 
 
-// --- Main Component ---
 export default function FormAnalysis({ formId }: { formId: Id<"forms"> }) {
     const analysisData = useQuery(api.form_responses_analysis.getAnalysis, { formId });
     const responses = useQuery(api.form_responses.getFormResponses, { formId });
@@ -331,7 +320,7 @@ export default function FormAnalysis({ formId }: { formId: Id<"forms"> }) {
         setIsGenerating(true);
         toast.info("Starting analysis generation... This may take a moment.", {
             icon: <Loader2 className="h-4 w-4 animate-spin" />,
-            duration: 5000, // Give it a bit longer default duration
+            duration: 5000, 
         });
         try {
             const result = await generateAnalysis({ formId });
@@ -343,22 +332,21 @@ export default function FormAnalysis({ formId }: { formId: Id<"forms"> }) {
             const errorMessage = error?.data?.message || error?.message || (typeof error === 'string' && error) || "An unknown error occurred.";
             toast.error(`Analysis generation failed: ${errorMessage}`, {
                 icon: <AlertCircle className="h-4 w-4" />,
-                duration: 8000, // Show error for longer
+                duration: 8000, 
             });
         } finally {
-            setIsGenerating(false);
+            setIsGenerating(false); 
         }
     };
 
     const isLoadingResponses = responses === undefined;
-    const isLoadingAnalysis = analysisData === undefined; // True when the query is first fetching
+    const isLoadingAnalysis = analysisData === undefined; 
     const hasResponses = useMemo(() => responses && responses.length > 0, [responses]);
 
-    // Determine the state for rendering UI
-    const showLoadingSkeletons = isLoadingAnalysis && analysisData === undefined; // Only initial load
+    const showLoadingSkeletons = isLoadingAnalysis && analysisData === undefined; 
     const showNoResponsesMessage = !isLoadingResponses && !hasResponses;
     const showAnalysisNotYetGenerated = !isLoadingAnalysis && analysisData === null && hasResponses;
-    const showAnalysisDisplay = !isLoadingAnalysis && analysisData && analysisData.analysis; // Check if analysis field within data exists
+    const showAnalysisDisplay = !isLoadingAnalysis && analysisData && analysisData.analysis; 
 
 
     return (
@@ -409,12 +397,10 @@ export default function FormAnalysis({ formId }: { formId: Id<"forms"> }) {
                 )}
             </Card>
 
-            {/* Analysis Display Section */}
             {showLoadingSkeletons && <AnalysisSkeletons />}
 
             {showNoResponsesMessage && !isLoadingResponses && (
-                <div className="mt-6"> {/* This message is already handled by the button section but good to have a placeholder spot if logic changes */}
-                    {/* Redundant if the InfoAlert in CardContent is shown, but kept for clarity of states */}
+                <div className="mt-6"> 
                 </div>
             )}
 

@@ -23,8 +23,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose, // Import DialogClose
-} from "@/components/ui/dialog"; // Import Dialog components
+  DialogClose,
+} from "@/components/ui/dialog";
 
 const optionSchema = z.object({
   value: z.string().min(1, { message: "Option cannot be empty." })
@@ -209,13 +209,11 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
       }
   };
 
-  // Function to initiate delete confirmation
   const initiateDelete = (questionInternalId: Id<"form_questions">) => {
       setQuestionToDelete(questionInternalId);
       setShowDeleteConfirm(true);
   };
 
-  // Function to handle the actual deletion after confirmation
   const handleConfirmDelete = async () => {
       if (!questionToDelete) return;
 
@@ -223,7 +221,6 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
       try {
           await deleteQuestion({ questionInternalId: questionToDelete });
           toast.success("Question deleted successfully!");
-          // If the deleted question was being edited, cancel the edit
           if (editingQuestionId === questionToDelete) {
               handleCancelEdit();
           }
@@ -232,8 +229,8 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
           toast.error(`Failed to delete question: ${error.data || error.message || error.toString()}`);
       } finally {
           setIsDeleting(false);
-          setShowDeleteConfirm(false); // Close the dialog
-          setQuestionToDelete(null); // Clear the question to delete
+          setShowDeleteConfirm(false); 
+          setQuestionToDelete(null); 
       }
   };
 
@@ -290,8 +287,7 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
                           const trimmedOption = option.trim();
                           const trimmedAnswer = q.answer.trim();
                           const isAnswer = trimmedOption === trimmedAnswer;
-                          // Using standard semantic color for correct answer text
-                           const textColorClass = isAnswer ? 'text-green-600 font-semibold' : 'text-muted-foreground';
+                         const textColorClass = isAnswer ? 'text-green-600 font-semibold' : 'text-muted-foreground';
                           return (
                             <div key={optIndex} className={`flex items-center ${textColorClass}`}>
                               {isAnswer ? <CheckCircle className="mr-1 h-3 w-3" /> : <span className="inline-block w-3 mr-1"></span>}
@@ -315,11 +311,10 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
                             <Edit2 className="h-4 w-4" />
                           </Button>
                       )}
-                      {/* Use a DialogTrigger button for delete */}
                        <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => initiateDelete(q._id)} // Call initiateDelete on click
+                        onClick={() => initiateDelete(q._id)}
                         aria-label={`Delete question ${q.order}`}
                         title={`Delete question ${q.order}`}
                          disabled={editingQuestionId === q._id}
@@ -338,7 +333,6 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
          <AiQuestionGenerator formId={formId} />
       )}
 
-      {/* Using standard muted background color for the form section */}
       <div ref={editFormRef} className="rounded-md border p-4 md:p-6 space-y-6 bg-muted/20">
          <h3 className="text-lg font-semibold mb-4">{formTitle}</h3>
         <Form {...form}>
@@ -395,7 +389,6 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
                       aria-label={`Remove option ${index + 1}`}
                       className="mt-1"
                     >
-                       {/* Using standard destructive color for remove icon */}
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   )}
@@ -410,7 +403,6 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
               >
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Option
               </Button>
-               {/* Using standard destructive color for validation message */}
                {form.formState.errors.options?.root && (
                  <p className="text-sm font-medium text-destructive mt-2">
                     {form.formState.errors.options.root.message}
@@ -470,7 +462,6 @@ export default function FormQuestions({ formId }: { formId: Id<"forms"> }) {
         </Form>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>
           <DialogHeader>

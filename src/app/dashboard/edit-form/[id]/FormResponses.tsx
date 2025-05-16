@@ -1,4 +1,3 @@
-// FormResponses.tsx
 import { useMemo } from "react";
 import { useQuery } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
@@ -46,7 +45,6 @@ interface SummaryStatisticsCardProps {
 }
 
 const StatItem = ({ icon: Icon, label, value, unit = '', subValue = '', className = '' }: { icon: React.ElementType, label: string, value: string | number | null, unit?: string, subValue?: string, className?: string }) => (
-    // Using standard muted/50 background color for stat items
     <div className={`flex flex-col p-3 bg-muted/50 rounded-lg shadow-sm min-h-[5rem] justify-center ${className}`}>
         <div className="flex items-center text-muted-foreground mb-1">
             <Icon className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -275,7 +273,6 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
     if (analysisData === null) {
         return (
             <div className="container mx-auto p-4 md:p-6 mt-6">
-                {/* Using standard semantic colors for error card */}
                 <Card className="border-red-500 bg-red-50">
                     <CardHeader>
                         <CardTitle className="flex items-center text-red-700">
@@ -341,7 +338,6 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                             <CardContent>
                                 <div className="h-72">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        {/* Using theme primary color for bar fill */}
                                         <BarChart data={scoreDistributionData} margin={{ top: 5, right: 20, left: -10, bottom: 20 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                             <XAxis dataKey="label" angle={-20} textAnchor="end" height={50} />
@@ -365,7 +361,6 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                                 <CardDescription>Percentage of correct answers per question. Sorted by difficulty.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {/* Using standard muted/20 background for question performance items */}
                                 <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                                     {questionPerformanceData.map((question, idx) => (
                                         <div key={question.id} className="p-3 border rounded-md bg-muted/20">
@@ -379,7 +374,6 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                                             </div>
                                             <Progress
                                                 value={question.correctPercentage}
-                                                // Using standard semantic colors for progress bar
                                                 className={`h-2.5 [&>div]:transition-all [&>div]:duration-500 ${
                                                     question.correctPercentage >= 70 ? '[&>div]:bg-green-500' :
                                                     question.correctPercentage >= 40 ? '[&>div]:bg-yellow-500' : '[&>div]:bg-red-500'
@@ -400,7 +394,6 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                 <div className="space-y-6">
                     {processedResponses.map((procResponse) => (
                         <Card key={procResponse._id} className="w-full overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-200">
-                            {/* Using standard muted/30 background for card header */}
                             <CardHeader className="bg-muted/30 px-4 py-3 border-b">
                                 <div className="flex justify-between items-center gap-2 flex-wrap">
                                     <CardTitle className="text-base md:text-lg font-medium">
@@ -408,7 +401,6 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                                     </CardTitle>
                                     {procResponse.totalQuestions > 0 ? (
                                         <Badge
-                                            // Using standard badge variants which map to theme colors
                                             variant={procResponse.score === procResponse.totalQuestions ? "default" : procResponse.score >= procResponse.totalQuestions * 0.7 ? "secondary" : "destructive"}
                                             className="text-sm px-3 py-1 flex-shrink-0"
                                         >
@@ -424,8 +416,7 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                             <CardContent className="p-4 space-y-3">
                                 {procResponse.detailedAnswers.map((answerDetail, index) => {
                                     const isQuestionMissing = answerDetail.questionText.startsWith("Question data not found");
-                                    // Using standard semantic colors for item backgrounds and borders
-                                    let itemStyle = "border-gray-200 bg-gray-50"; // Default
+                                    let itemStyle = "border-gray-200 bg-gray-50";
                                     let icon = null;
 
                                     if (isQuestionMissing) {
@@ -447,7 +438,6 @@ export default function FormResponses({ formId }: { formId: Id<"forms"> }) {
                                             className={`p-3 rounded-md border ${itemStyle} transition-colors`}
                                         >
                                             <div className="flex justify-between items-start mb-1.5">
-                                                {/* Text color adapts based on item style */}
                                                 <p className={`font-medium text-sm flex-grow mr-2 leading-tight ${isQuestionMissing || procResponse.totalQuestions === 0 ? 'text-inherit' : 'text-foreground'}`}>
                                                     {index + 1}. {answerDetail.questionText}
                                                 </p>

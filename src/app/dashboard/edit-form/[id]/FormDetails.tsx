@@ -1,5 +1,3 @@
-// src/app/(dashboard)/forms/[id]/edit/FormDetails.tsx
-
 "use client";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from 'convex/react';
@@ -137,7 +135,6 @@ export default function FormDetails({ id }: { id: string } ) {
   const isLoading = formDetails === undefined;
   const currentStatus = formDetails?.acceptingResponses ?? false;
   const statusText = isLoading ? "Loading..." : (currentStatus ? "Accepting Responses" : "Not Accepting Responses");
-  // Using standard semantic colors for status indicator
   const statusColor = isLoading ? "text-muted-foreground" : (currentStatus ? "text-green-600" : "text-red-600");
 
   return (
@@ -171,7 +168,7 @@ export default function FormDetails({ id }: { id: string } ) {
              type="text"
              readOnly
              value={isLoading ? 'Loading...' : formUrl || 'Set a valid slug...'}
-             className="flex-grow bg-white" // Keeping bg-white for input clarity
+             className="flex-grow bg-white" 
              placeholder="Form URL will appear here"
           />
           <div className="flex space-x-2">
@@ -184,7 +181,6 @@ export default function FormDetails({ id }: { id: string } ) {
           </div>
         </div>
          {!watchSlug && !isLoading && (
-           // Using standard semantic color for validation message
            <p className="text-sm text-red-600 mt-1">Please set a valid slug (min 5 chars, no spaces) to generate the URL.</p>
          )}
          {!formUrl && watchSlug && !isLoading && (

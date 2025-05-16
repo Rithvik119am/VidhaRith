@@ -29,12 +29,10 @@ export default function DashboardLayout({
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)]  mx-auto w-full">
-      {/* Mobile header */}
       <div className="flex items-center justify-between  border-b border-gray-200 p-4">
         <Link href="/dashboard/forms" className="text-lg font-semibold text-gray-800">Dashboard</Link>
 
         <div className="flex items-center space-x-2 lg:hidden">
-          {/* Sidebar Toggle Button */}
           <Button
             variant="ghost"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -43,18 +41,15 @@ export default function DashboardLayout({
             <span className="sr-only">Toggle sidebar</span>
           </Button>
 
-          {/* User Button */}
           <UserButton afterSignOutUrl="/" />
         </div>
 
-        {/* Show only UserButton on large screens */}
         <div className="hidden lg:block">
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden h-full">
-        {/* Sidebar */}
         <aside
           className={`w-64 bg-white lg:bg-gray-50 border-r border-gray-200 lg:block ${
             isSidebarOpen ? 'block' : 'hidden'
@@ -89,7 +84,6 @@ export default function DashboardLayout({
           </div>
         </aside>
 
-        {/* Main content className="container flex-grow mx-auto m-2" */}
         <main className="flex-1 overflow-y-auto p-0 bg-background lg:p-6">{children}</main>
       </div>
     </div>

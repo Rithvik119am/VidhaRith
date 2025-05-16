@@ -1,4 +1,3 @@
-// components/UserFiles.tsx
 "use client";
 
 import React, { useState, useRef, ChangeEvent } from 'react';
@@ -6,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id, Doc } from '../../convex/_generated/dataModel';
 
-// shadcn/ui components
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +22,6 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Import Dialog components for viewing details
 import {
     Dialog,
     DialogContent,
@@ -35,10 +32,8 @@ import {
 } from "@/components/ui/dialog";
 
 
-// Icons
 import { Upload, Trash2, Loader2, File as FileIcon, DownloadIcon } from 'lucide-react';
 
-// Toast notification
 import { toast } from "sonner";
 
 const MAX_FILE_SIZE_MB = 10;
@@ -48,25 +43,20 @@ export default function UserFiles() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // State for Delete Dialog
   const [deletingFileId, setDeletingFileId] = useState<Id<"files"> | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // State for View Details Dialog
   const [viewingFile, setViewingFile] = useState<Doc<"files"> | null>(null);
   const [isFetchingDownloadUrl, setIsFetchingDownloadUrl] = useState(false);
 
 
-  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for clearing file input
-
-  // Convex hooks
+  const fileInputRef = useRef<HTMLInputElement>(null); 
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const sendFile = useMutation(api.files.sendFile);
   const userFiles = useQuery(api.files.getUserFiles, {});
   const deleteFile = useMutation(api.files.deleteFile);
 
-  // Use the new mutation for getting the download URL
-  const getDownloadUrl = useMutation(api.files.getDownloadUrl); // Use the mutation hook here
+  const getDownloadUrl = useMutation(api.files.getDownloadUrl); 
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -75,7 +65,7 @@ export default function UserFiles() {
         toast.error(`File is too large. Max size is ${MAX_FILE_SIZE_MB} MB.`);
         setSelectedFile(null);
         if (fileInputRef.current) {
-            fileInputRef.current.value = ''; // Clear the input
+            fileInputRef.current.value = ''; 
         }
         return;
       }
@@ -152,7 +142,7 @@ export default function UserFiles() {
       try {
           await deleteFile({ fileId: deletingFileId });
           toast.success("File deleted successfully!");
-          setDeletingFileId(null); // Close dialog
+          setDeletingFileId(null); 
       } catch (error: any) {
           console.error("Failed to delete file:", error);
           const errorMessage = error.data?.message || error.message || "An unknown error occurred";
@@ -162,12 +152,9 @@ export default function UserFiles() {
       }
   };
 
-    // Handle click on a file name to view details
     const handleViewFileClick = (file: Doc<"files">) => {
-        setViewingFile(file); // Set the file object to open the dialog
+        setViewingFile(file); 
     };
-
-    // Handle download button click inside the view dialog
     const handleDownloadClick = async () => {
         if (!viewingFile) return;
 
@@ -179,22 +166,18 @@ export default function UserFiles() {
                  throw new Error("Received no download URL from backend.");
             }
 
-            // --- MODIFIED CODE HERE ---
-            // Trigger browser download using a temporary link
             const link = document.createElement('a');
             link.href = downloadUrl;
-            link.download = viewingFile.name; // Suggest the original filename
-            link.target = '_blank'; // *** Added this line *** - Opens in a new tab/window
-            link.rel = 'noopener noreferrer'; // *** Added this line *** - Security best practice with target="_blank"
+            link.download = viewingFile.name; 
+            link.target = '_blank'; 
+            link.rel = 'noopener noreferrer'; 
 
-            // Append to body is often necessary for the click() to work reliably
             document.body.appendChild(link);
             link.click();
 
-            // Clean up the temporary link
             document.body.removeChild(link);
 
-            // toast.success(`Download attempted for "${viewingFile.name}"`); // Optional: Indicate the action
+            toast.success(`Download attempted for "${viewingFile.name}"`); 
 
         } catch (error: any) {
              console.error("Failed to get download URL or download:", error);
@@ -206,49 +189,37 @@ export default function UserFiles() {
     };
 
 
-  // --- Render Logic ---
-
     return (
         <div className="container mx-auto py-8 space-y-6">
              <h2 className="text-2xl font-bold">Your Files</h2>
 
-             {/* Upload Section */}
              <Card>
     <CardHeader>
         <CardTitle>Upload a New File</CardTitle>
-        {/* Adjust description as needed, MAX_FILE_SIZE_MB assumed */}
         <CardDescription>Select a file (max {MAX_FILE_SIZE_MB} MB) and click Upload.</CardDescription>
     </CardHeader>
     <CardContent className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        {/* The actual file input - hidden visually but triggered by the button */}
         <Input
             ref={fileInputRef}
             id="file-upload"
             type="file"
             onChange={handleFileChange}
-            // Add accept attribute to only allow PDFs
             accept=".pdf"
-            // Visually hide the default input, but keep it accessible
-            className="flex-grow hidden" // Or use CSS to hide non-visually if needed
+            className="flex-grow hidden" 
             disabled={isUploading}
         />
-        {/* The button that users interact with */}
-        {/* onClick triggers the file input click */}
-        {/* Disable only when uploading */}
         <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full sm:w-auto">
             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            {isUploading ? "Uploading..." : "Select and Upload File"} {/* Button text reflects action */}
+            {isUploading ? "Uploading..." : "Select and Upload File"}
         </Button>
 
-        {/* Optional: Display selected file name */}
         {selectedFile && (
              <div className="flex-grow text-sm text-gray-600 truncate">
                  Selected: {selectedFile.name}
              </div>
         )}
-         {/* Add a separate button to trigger the actual upload *after* selecting a file */}
-        {/* This button would call the original upload logic (e.g., API call) */}
-         <Button onClick={handleUploadClick} disabled={!selectedFile || isUploading} className="w-full sm:w-auto">
+         
+        <Button onClick={handleUploadClick} disabled={!selectedFile || isUploading} className="w-full sm:w-auto">
              {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
              {isUploading ? "Uploading..." : "Initiate Upload"}
          </Button>
@@ -256,10 +227,9 @@ export default function UserFiles() {
     </CardContent>
 </Card>
 
-            {/* Files List Section */}
              <h3 className="text-xl font-semibold">Uploaded Files</h3>
 
-            {userFiles === undefined && ( // Loading State
+            {userFiles === undefined && ( 
                 <div className="space-y-4">
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
@@ -267,7 +237,7 @@ export default function UserFiles() {
                 </div>
             )}
 
-            {userFiles && userFiles.length > 0 && ( // Files Exist
+            {userFiles && userFiles.length > 0 && ( 
                 <Card>
                     <CardContent className="p-0">
                         <div className="rounded-md border overflow-hidden">
@@ -284,11 +254,10 @@ export default function UserFiles() {
                                 {userFiles.map((file) => (
                                     <TableRow key={file._id}>
                                         <TableCell className="font-medium">
-                                            {/* Make file name clickable */}
                                             <button
                                                 onClick={() => handleViewFileClick(file)}
                                                 className="flex items-center gap-2 hover:underline text-primary text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                                                disabled={isDeleting || isUploading} // Disable clicks while deleting or uploading
+                                                disabled={isDeleting || isUploading} 
                                             >
                                                  <FileIcon className="h-4 w-4 text-muted-foreground" />
                                                  {file.name}
@@ -299,7 +268,6 @@ export default function UserFiles() {
                                             {new Date(file._creationTime).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                             {/* Delete Button */}
                                             <AlertDialog open={deletingFileId === file._id} onOpenChange={(isOpen) => !isOpen && setDeletingFileId(null)}>
                                                 <AlertDialogTrigger asChild>
                                                      <Button
@@ -307,7 +275,7 @@ export default function UserFiles() {
                                                          size="icon"
                                                          aria-label={`Delete file "${file.name}"`}
                                                          onClick={() => handleDeleteClick(file._id)}
-                                                          disabled={isDeleting && deletingFileId === file._id} // Disable specific button while deleting it
+                                                          disabled={isDeleting && deletingFileId === file._id}
                                                      >
                                                           {isDeleting && deletingFileId === file._id ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -344,13 +312,12 @@ export default function UserFiles() {
                 </Card>
             )}
 
-             {userFiles && userFiles.length === 0 && ( // Empty State
+             {userFiles && userFiles.length === 0 && ( 
                 <div className="text-center p-6 border rounded-md bg-muted/20">
                     <p className="text-muted-foreground">You haven&quot;t uploaded any files yet.</p>
                 </div>
             )}
 
-            {/* File Details Dialog */}
             <Dialog open={viewingFile !== null} onOpenChange={(isOpen) => !isOpen && setViewingFile(null)}>
                 <DialogContent>
                     <DialogHeader>
@@ -370,7 +337,6 @@ export default function UserFiles() {
                      </div>
 
                     <DialogFooter>
-                        {/* Close button is implicit or can be added */}
                         <Button onClick={handleDownloadClick} disabled={isFetchingDownloadUrl || !viewingFile}>
                              {isFetchingDownloadUrl ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <DownloadIcon className="mr-2 h-4 w-4" />}
                              {isFetchingDownloadUrl ? "Getting URL..." : "Download File"}

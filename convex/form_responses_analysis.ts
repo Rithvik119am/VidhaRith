@@ -1,55 +1,45 @@
-// convex/form_responses_analysis.ts
 import { action, internalMutation, mutation, query } from './_generated/server';
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { ConvexError } from 'convex/values';
 import { rateLimiter } from './rate_limit';
-// --- AI SDK Imports ---
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
-import { z } from 'zod'; // For validating the LLM response structure
+import { z } from 'zod';
 
-// --- Zod Schema for Analysis Data (matching schema.ts) ---
-// This helps validate the LLM's JSON output before saving.
 const analysisDataSchema = z.object({
   individualAnalysis: z.array(
     z.object({
-      responseId: z.custom<Id<"form_responses">>((val) => typeof val === 'string' && val.startsWith('')), // Basic check for Convex ID format
-      performanceByTopic: z.object({ // Renamed for clarity, reflects correctness stats
+      responseId: z.custom<Id<"form_responses">>((val) => typeof val === 'string' && val.startsWith('')),
+      performanceByTopic: z.object({
         correct: z.number(),
         total: z.number(),
         percentage: z.number(),
       }),
-      // The LLM might infer 'topics' based on question text, or just list question IDs/text
-      weakTopics: z.array(z.string()), // Questions/concepts answered incorrectly
-      strongTopics: z.array(z.string()), // Questions/concepts answered correctly
-      individualFocusAreas: z.array(z.string()), // Suggestions based on weak topics
+      weakTopics: z.array(z.string()),
+      strongTopics: z.array(z.string()),
+      individualFocusAreas: z.array(z.string()),
     })
   ),
   collectiveAnalysis: z.object({
-    topicPerformanceSummary: z.object({ // Renamed for clarity
+    topicPerformanceSummary: z.object({
         correct: z.number(),
         total: z.number(),
         percentage: z.number(),
       }),
-    // Aggregate weaknesses/strengths across all responses
-    collectiveWeaknesses: z.array(z.string()), // Common incorrect questions/concepts
-    collectiveFocusAreas: z.array(z.string()), // Overall areas needing attention
+    collectiveWeaknesses: z.array(z.string()),
+    collectiveFocusAreas: z.array(z.string()),
   }),
 });
-
-// Type alias for the validated analysis data
 type AnalysisData = z.infer<typeof analysisDataSchema>;
 
-// --- Internal Mutation: Saves the analysis result ---
 export const internal_saveAnalysis = internalMutation({
     args: {
         formId: v.id("forms"),
-        analysis: v.any(), // We receive 'any' from the action, validation happened there
+        analysis: v.any(), 
     },
     handler: async (ctx, args) => {
-        // The analysis structure was already validated in the action
         const validatedAnalysis = args.analysis as AnalysisData;
 
         const existingAnalysis = await ctx.db
@@ -74,7 +64,6 @@ export const internal_saveAnalysis = internalMutation({
     },
 });
 
-// --- Action: Fetches data, calls LLM, triggers save ---
 export const generateAnalysis = action({
     args: {
         formId: v.id("forms"),
@@ -86,7 +75,6 @@ export const generateAnalysis = action({
          }
          await rateLimiter.check(ctx, "responceAnalysis", {key: identity.subject,throws: true});
 
-        // --- Authorization: Ensure user owns the form ---
         const form = await ctx.runQuery(internal.forms.getFormForOwner, { formId: args.formId });
          if (!form) {
              throw new ConvexError("Form not found or user does not have permission.");
@@ -96,21 +84,14 @@ export const generateAnalysis = action({
          }
 
 
-        // --- Data Fetching ---
-        // 1. Get all questions for the form (including answers and options)
         const questions = await ctx.runQuery(internal.form_questions.getFormQuestionsInternal, { formId: args.formId });
         if (!questions || questions.length === 0) {
             throw new ConvexError("No questions found for this form. Cannot generate analysis.");
         }
-
-        // 2. Get all responses for the form
         const responses = await ctx.runQuery(internal.form_responses.getFormResponsesInternal, { formId: args.formId });
          if (!responses || responses.length === 0) {
-             // Decide if this is an error or just means analysis is empty/trivial
-             // For now, let's create an empty analysis record or return early.
              console.log(`No responses found for form ${args.formId}. Skipping analysis generation.`);
-              // Optionally save an empty state:
-               const emptyAnalysis: AnalysisData = {
+              const emptyAnalysis: AnalysisData = {
                    individualAnalysis: [],
                    collectiveAnalysis: {
                        topicPerformanceSummary: { correct: 0, total: 0, percentage: 0 },
@@ -123,51 +104,42 @@ export const generateAnalysis = action({
                   analysis: emptyAnalysis,
               });
              return { message: "No responses found, analysis record initialized or updated as empty." };
-            // OR: throw new ConvexError("No responses found for this form. Cannot generate analysis.");
          }
 
 
-        // --- Prepare Data for LLM ---
-        // Create a map for easy question lookup
         const questionMap = new Map(questions.map(q => [q._id, q]));
-
-        // Format responses with necessary question details
         const formattedResponses = responses.map(response => {
             const responseDetails = response.values.map(value => {
                 const question = questionMap.get(value.questionId);
                 return {
                     questionId: value.questionId,
-                    questionText: value.question, // Already in response, but good to ensure consistency
-                    options: question?.selectOptions ?? [], // Add options
-                    correctAnswer: question?.answer ?? "N/A", // Add correct answer
+                    questionText: value.question,
+                    options: question?.selectOptions ?? [],
+                    correctAnswer: question?.answer ?? "N/A", 
                     userSelectedOption: value.userSelectedOption,
                 };
             });
             return {
-                responseId: response._id, // Include response ID
+                responseId: response._id,
                 submittedAnswers: responseDetails,
             };
         });
 
-         // Format questions for the prompt
          const formattedQuestions = questions.map(q => ({
              questionId: q._id,
              questionText: q.question,
              options: q.selectOptions ?? [],
              correctAnswer: q.answer,
-             order: Number(q.order), // Convert BigInt to number if necessary for prompt
+             order: Number(q.order), 
              type: q.type,
          }));
          console.log("Formatted Responses for LLM:", formattedResponses);
 
 
-        // --- LLM Call ---
         const apiKey = process.env.GOOGLE_API_KEY;
         if (!apiKey) {
             throw new ConvexError("GOOGLE_API_KEY environment variable is not set.");
         }
-
-        // Construct the prompt
         const prompt = `
           You are an expert educational analyst. Analyze the following form responses based on the provided questions.
 
@@ -252,44 +224,37 @@ Use the match between \`userSelectedOption\` and \`correctAnswer\` to compute co
         try {
              console.log("Sending request to Google AI...");
              const { text } = await generateText({
-                 model: google('gemini-2.0-flash'), // Or your preferred model
+                 model: google('gemini-2.0-flash'),
                  prompt: prompt,
-                 // Optional: Add system prompt, temperature etc. if needed
-                 // system: "You are an educational analyst generating JSON."
              });
             llmResponseText = text;
             console.log("Received response from Google AI.");
-            // console.log("LLM Response Text:", llmResponseText); // Be careful logging potentially large responses
 
         } catch (error: any) {
             console.error("Error calling Google AI:", error);
             throw new ConvexError(`Failed to get analysis from AI service: ${error.message}`);
         }
 
-        // --- Parse and Validate LLM Response ---
         let parsedAnalysis: any;
         try {
-            // Clean potential markdown code fences
             const cleanedJson = llmResponseText.replace(/^```json\s*|\s*```$/g, '').trim();
             parsedAnalysis = JSON.parse(cleanedJson);
         } catch (error: any) {
             console.error("Failed to parse LLM response as JSON:", error);
-            console.error("LLM Response Text that failed parsing:", llmResponseText); // Log the problematic text
+            console.error("LLM Response Text that failed parsing:", llmResponseText);
             throw new ConvexError(`Failed to parse analysis JSON from AI service: ${error.message}`);
         }
 
-         // Validate the parsed structure against our Zod schema
          const validationResult = analysisDataSchema.safeParse(parsedAnalysis);
          if (!validationResult.success) {
             console.error("LLM response failed validation:", validationResult.error.errors);
-             console.error("Parsed Analysis Object that failed validation:", parsedAnalysis); // Log the problematic object
+             console.error("Parsed Analysis Object that failed validation:", parsedAnalysis);
             throw new ConvexError(`AI service returned data in an unexpected format: ${validationResult.error.message}`);
          }
 
-        // --- Save Validated Analysis ---
         await ctx.runMutation(internal.form_responses_analysis.internal_saveAnalysis, {
             formId: args.formId,
-            analysis: validationResult.data, // Use the validated data
+            analysis: validationResult.data,
         });
 
         console.log(`Successfully generated and saved analysis for form ${args.formId}`);
@@ -298,7 +263,6 @@ Use the match between \`userSelectedOption\` and \`correctAnswer\` to compute co
 });
 
 
-// --- Get Analysis Query ---
 export const getAnalysis = query({
     args: {
         formId: v.id("forms"),
@@ -306,22 +270,16 @@ export const getAnalysis = query({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (identity === null) {
-            // Return null or empty object if user not logged in, depending on desired public behavior
             return null;
-            // OR: throw new ConvexError("Not authenticated");
         }
 
-        // Optional: Authorize if only owner should see analysis
         const form = await ctx.db.get(args.formId);
         if (!form) {
             throw new ConvexError("Associated form not found");
         }
-        // Uncomment below if only the creator can view the analysis
          if (form.createdBy !== identity.subject) {
              console.warn(`User ${identity.subject} attempted to access analysis for form ${args.formId} owned by ${form.createdBy}`);
-             // Decide: throw error or return null/empty?
-             return null; // Silently deny access
-             // OR: throw new ConvexError("User does not have permission to view analysis for this form");
+             return null;
          }
 
         const analysisRecord = await ctx.db
@@ -329,14 +287,12 @@ export const getAnalysis = query({
             .withIndex("by_formId", (q) => q.eq("formId", args.formId))
             .first();
 
-        return analysisRecord; // Returns the analysis document or null
+        return analysisRecord;
     },
 });
 
-// --- Delete Analysis Mutation ---
 export const deleteAnalysis = mutation({
     args: {
-        // Allow deletion by either analysis ID or form ID for flexibility
         id: v.union(v.id("form_responses_analysis"), v.id("forms")),
     },
     handler: async (ctx, args) => {
@@ -348,13 +304,11 @@ export const deleteAnalysis = mutation({
         let analysisRecord;
         let formId: Id<"forms">;
 
-        // Check if provided ID is for the analysis table or forms table
         const maybeAnalysis = await ctx.db.get(args.id as Id<"form_responses_analysis">);
-        if (maybeAnalysis && maybeAnalysis.formId) { // Check if it looks like an analysis record
+        if (maybeAnalysis && maybeAnalysis.formId) {
              analysisRecord = maybeAnalysis;
              formId = analysisRecord.formId;
         } else {
-            // Assume the ID is a formId, find the corresponding analysis record
             formId = args.id as Id<"forms">;
             analysisRecord = await ctx.db
                 .query("form_responses_analysis")
@@ -368,16 +322,13 @@ export const deleteAnalysis = mutation({
             return { success: false, message: "Analysis not found." };
         }
 
-        // Authorize: Check if user owns the associated form
-        const form = await ctx.db.get(formId); // Use the determined formId
+        const form = await ctx.db.get(formId);
          if (!form) {
             console.warn(`Associated form ${formId} not found for analysis record ${analysisRecord._id}. Allowing deletion.`);
-             // Decide if deletion should proceed if form is gone. Let's allow it here.
          } else if (form.createdBy !== identity.subject) {
              throw new ConvexError("User does not have permission to delete this analysis.");
          }
 
-        // Delete the analysis record
         await ctx.db.delete(analysisRecord._id);
         console.log(`Deleted analysis record: ${analysisRecord._id} for form ${formId}`);
 
@@ -385,10 +336,6 @@ export const deleteAnalysis = mutation({
     },
 });
 
-
-// --- Helper Internal Queries (Needed by the Action) ---
-// You might need to add these to their respective files (forms.ts, form_questions.ts, form_responses.ts)
-// or define them here if preferred. Using internal queries is necessary for actions calling queries.
 
 
 

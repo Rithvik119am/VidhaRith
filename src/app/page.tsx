@@ -1,12 +1,4 @@
-// app/page.tsx
 "use client";
-import { SignInButton, UserButton } from "@clerk/clerk-react";
-import { Authenticated, Unauthenticated } from "convex/react";
-import Header from "./Header";
-// Import the components
-import UserForms from "@/components/UserForms"; // Adjust path if necessary
-import UserFiles from "@/components/UserFiles"; // Import the new component
-import { Separator } from "@/components/ui/separator"; // Optional: For visual separation
 import Navbar from "@/components/landing-page/Navbar";
 import Hero from "@/components/landing-page/Hero";
 import Features from "@/components/landing-page/Features";

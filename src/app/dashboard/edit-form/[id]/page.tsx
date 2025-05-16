@@ -4,7 +4,6 @@ import { Id } from '../../../../../convex/_generated/dataModel';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Import the component sections
 import FormDetails from "./FormDetails";
 import FormQuestions from "./FormQuestions";
 import FormResponses from './FormResponses';
@@ -20,7 +19,6 @@ export default function Page({ params }: { params: { id: Id<"forms"> } }) {
         <div className="text-center text-lg">Please sign in to manage forms.</div>
       </Unauthenticated>
       <Authenticated>
-        {/* Tabs component and triggers use the theme colors automatically */}
         <Tabs defaultValue="details_questions" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mx-auto mb-6 md:w-[500px]">
             <TabsTrigger value="details_questions">Form Settings</TabsTrigger>

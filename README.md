@@ -1,116 +1,151 @@
-# Informal
+# Vitharith - AI-Powered Quiz Platform for Educators
 
-![Screenshot](./informal_screenshot.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.28-000000?logo=next.js)](https://nextjs.org/)
+[![Convex](https://img.shields.io/badge/Convex-1.23.0-0072F5)](https://www.convex.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 
-A free form builder built with [Next.js](https://nextjs.org/) and [Convex](https://www.convex.dev/).
-- Design forms with unlimited fields.
-- Collect responses.
-- View user submissions in real-time.
-- Fully reactive and cloud-based.
-- Easily deploy to Vercel, Netflify or similar.
+Vitharith is a modern, AI-powered quiz platform designed to help educators gain real-time insights into student comprehension. The platform enables teachers to create, distribute, and analyze quizzes with powerful AI-assisted features.
 
-## Running the App
+## 🚀 Features
 
-For user authentication, follow the [Clerk setup instructions](https://docs.convex.dev/auth/clerk) to obtain a **publishable key** and then set it up as `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` environment variable in `.env.local`.
+### For Educators
+- **Interactive Quiz Creation**: Build custom quizzes with various question types
+- **Real-time Analytics Dashboard**: Monitor student responses as they happen
+- **AI-Powered Question Generation**: Automatically generate questions from uploaded materials
+- **Comprehensive Student Insights**:
+  - Individual student performance analysis
+  - Class-wide performance metrics
+  - Topic-wise strength and weakness identification
+- **Material Management**: Upload and organize teaching materials in one place
 
-To run the app:
+### Technical Highlights
+- **Real-time Data Sync**: Instant updates across all devices
+- **AI Integration**: Leverages Google's Generative AI for question generation
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Secure Authentication**: Built with Clerk for secure user management
 
-```
-npm install
-npm run dev
-```
+## 🛠️ Tech Stack
 
-This will configure a Convex project if you don't already have one, open the
-Convex dashboard and the web app running on `localhost`.
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **UI Components**: Radix UI Primitives and Shadcn UI
+- **Styling**: Tailwind CSS with custom theming
+- **State Management**: React Hooks + Convex
+- **Form Handling**: React Hook Form with Zod validation
+- **Charts & Visualizations**: Recharts
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Backend
+- **Database & Real-time Sync**: Convex
+- **Authentication**: Clerk
+- **AI/ML**: Google Generative AI
+- **API Routes**: Next.js API Routes
 
+### Development Tools
+- **Type Safety**: TypeScript
+- **Code Formatting**: ESLint + Prettier
+- **Version Control**: Git
+- **Package Manager**: npm
 
+## 🚀 Getting Started
 
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Convex account
+- Google Cloud account (for AI features)
 
-# What is Convex?
+### Installation
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/vitharith.git
+   cd vitharith
+   ```
 
-[Convex](https://convex.dev) is a hosted backend platform with a
-built-in database that lets you write your
-[database schema](https://docs.convex.dev/database/schemas) and
-[server functions](https://docs.convex.dev/functions) in
-[TypeScript](https://docs.convex.dev/typescript). Server-side database
-[queries](https://docs.convex.dev/functions/query-functions) automatically
-[cache](https://docs.convex.dev/functions/query-functions#caching--reactivity) and
-[subscribe](https://docs.convex.dev/client/react#reactivity) to data, powering a
-[realtime `useQuery` hook](https://docs.convex.dev/client/react#fetching-data) in our
-[React client](https://docs.convex.dev/client/react). There are also clients for
-[Python](https://docs.convex.dev/client/python),
-[Rust](https://docs.convex.dev/client/rust),
-[ReactNative](https://docs.convex.dev/client/react-native), and
-[Node](https://docs.convex.dev/client/javascript), as well as a straightforward
-[HTTP API](https://docs.convex.dev/http-api/).
+2. Install dependencies
+   ```bash
+   npm install
+   # or
+   yarn
+   ```
 
-The database supports
-[NoSQL-style documents](https://docs.convex.dev/database/document-storage) with
-[opt-in schema validation](https://docs.convex.dev/database/schemas),
-[relationships](https://docs.convex.dev/database/document-ids) and
-[custom indexes](https://docs.convex.dev/database/indexes/)
-(including on fields in nested objects).
+3. Set up Convex
+   ```bash
+   # Install Convex CLI globally if you haven't already
+   npm install -g convex
+   
+   # Log in to Convex
+   npx convex init
+   
+   # Push your schema and functions to Convex
+   npx convex dev
+   ```
 
-The
-[`query`](https://docs.convex.dev/functions/query-functions) and
-[`mutation`](https://docs.convex.dev/functions/mutation-functions) server functions have transactional,
-low latency access to the database and leverage our
-[`v8` runtime](https://docs.convex.dev/functions/runtimes) with
-[determinism guardrails](https://docs.convex.dev/functions/runtimes#using-randomness-and-time-in-queries-and-mutations)
-to provide the strongest ACID guarantees on the market:
-immediate consistency,
-serializable isolation, and
-automatic conflict resolution via
-[optimistic multi-version concurrency control](https://docs.convex.dev/database/advanced/occ) (OCC / MVCC).
+4. Set up environment variables
+   Create a `.env.local` file in the root directory and add the following variables:
+   
+   ```env
+   # Convex
+   CONVEX_DEPLOYMENT=your_convex_deployment
+   NEXT_PUBLIC_CONVEX_URL=your_convex_url  # Get this from Convex dashboard after setup
+   
+   # Clerk Authentication
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+   CLERK_SECRET_KEY=your_clerk_secret_key
+   
+   # Google AI
+   GOOGLE_AI_KEY=your_google_ai_key
+   
+   # Application
+   NEXT_PUBLIC_WEBSITE_URL=http://localhost:3000
+   ```
+   
+   After running `npx convex dev`, it will provide you with the `NEXT_PUBLIC_CONVEX_URL` that you need to add to your environment variables.
 
-The [`action` server functions](https://docs.convex.dev/functions/actions) have
-access to external APIs and enable other side-effects and non-determinism in
-either our
-[optimized `v8` runtime](https://docs.convex.dev/functions/runtimes) or a more
-[flexible `node` runtime](https://docs.convex.dev/functions/runtimes#nodejs-runtime).
+4. Run the development server
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-Functions can run in the background via
-[scheduling](https://docs.convex.dev/scheduling/scheduled-functions) and
-[cron jobs](https://docs.convex.dev/scheduling/cron-jobs).
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-Development is cloud-first, with
-[hot reloads for server function](https://docs.convex.dev/cli#run-the-convex-dev-server) editing via the
-[CLI](https://docs.convex.dev/cli),
-[preview deployments](https://docs.convex.dev/production/hosting/preview-deployments),
-[logging and exception reporting integrations](https://docs.convex.dev/production/integrations/),
-There is a
-[dashboard UI](https://docs.convex.dev/dashboard) to
-[browse and edit data](https://docs.convex.dev/dashboard/deployments/data),
-[edit environment variables](https://docs.convex.dev/production/environment-variables),
-[view logs](https://docs.convex.dev/dashboard/deployments/logs),
-[run server functions](https://docs.convex.dev/dashboard/deployments/functions), and more.
+## 📊 Features in Action
 
-There are built-in features for
-[reactive pagination](https://docs.convex.dev/database/pagination),
-[file storage](https://docs.convex.dev/file-storage),
-[reactive text search](https://docs.convex.dev/text-search),
-[vector search](https://docs.convex.dev/vector-search),
-[https endpoints](https://docs.convex.dev/functions/http-actions) (for webhooks),
-[snapshot import/export](https://docs.convex.dev/database/import-export/),
-[streaming import/export](https://docs.convex.dev/production/integrations/streaming-import-export), and
-[runtime validation](https://docs.convex.dev/database/schemas#validators) for
-[function arguments](https://docs.convex.dev/functions/args-validation) and
-[database data](https://docs.convex.dev/database/schemas#schema-validation).
+### Quiz Creation
+![Quiz Creation Demo](/public/demo/quiz-creation.gif)
 
-Everything scales automatically, and it’s [free to start](https://www.convex.dev/plans).
+### Real-time Analytics
+![Analytics Dashboard](/public/demo/analytics.png)
 
+### AI Question Generation
+![AI Question Generation](/public/demo/ai-generation.gif)
 
-# Next.js
+## 🤝 Contributing
 
-To learn more about Next.js, take a look at the following resources:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## 📄 License
 
-# Hosting and Deployment
+Distributed under the MIT License. See `LICENSE` for more information.
 
-To learn more about deploying your own version head to the [Hosting and Deployment guide](https://docs.convex.dev/production/hosting/).
+## 📧 Contact
+
+Your Name - [@your_twitter](https://twitter.com/your_twitter) - your.email@example.com
+
+Project Link: [https://github.com/Rithvik119am/VidhaRith](https://github.com/Rithvik119am/VidhaRith)
+
+## 🙏 Acknowledgments
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Convex Documentation](https://docs.convex.dev/)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [Radix UI](https://www.radix-ui.com/)
+- [Shadcn UI](https://ui.shadcn.com/)
