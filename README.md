@@ -1,11 +1,14 @@
 # Vitharith - AI-Powered Quiz Platform for Educators
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-brightgreen)](https://vidharith.vercel.app/)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2.28-000000?logo=next.js)](https://nextjs.org/)
 [![Convex](https://img.shields.io/badge/Convex-1.23.0-0072F5)](https://www.convex.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 
 Vitharith is a modern, AI-powered quiz platform designed to help educators gain real-time insights into student comprehension. The platform enables teachers to create, distribute, and analyze quizzes with powerful AI-assisted features.
+
+🔗 **Live Demo:** [https://vidharith.vercel.app/](https://vidharith.vercel.app/)
 
 ## 🚀 Features
 
@@ -114,13 +117,13 @@ Vitharith is a modern, AI-powered quiz platform designed to help educators gain 
 ## 📊 Features in Action
 
 ### Quiz Creation
-![Quiz Creation Demo](/public/demo/quiz-creation.gif)
+![Quiz Creation Demo](/public/readme/quiz-creation.mp4)
 
 ### Real-time Analytics
-![Analytics Dashboard](/public/demo/analytics.png)
+![Analytics Dashboard](/public/readme/analytics.png)
 
 ### AI Question Generation
-![AI Question Generation](/public/demo/ai-generation.gif)
+![AI Question Generation](/public/readme/ai-question.mp4)
 
 ## 🤝 Contributing
 
@@ -138,7 +141,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📧 Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - your.email@example.com
+K. Sai Rithvik Reddy - [@DSToday1](https://x.com/DSToday1) - rithvikreddy524@gmail.com
 
 Project Link: [https://github.com/Rithvik119am/VidhaRith](https://github.com/Rithvik119am/VidhaRith)
 
