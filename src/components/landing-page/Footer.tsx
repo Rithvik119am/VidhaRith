@@ -53,9 +53,9 @@ const Footer = () => {
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-white/70">
-                <li><a href="#" className="hover:text-quiz-secondary transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-quiz-secondary transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-quiz-secondary transition-colors">Privacy Policy</a></li>
+                <li><a href="https://github.com/Rithvik119am/VidhaRith" className="hover:text-quiz-secondary transition-colors">About Us</a></li>
+                <li><a href="https://github.com/Rithvik119am/VidhaRith" className="hover:text-quiz-secondary transition-colors">Contact</a></li>
+                <li><a href="https://github.com/Rithvik119am/VidhaRith" className="hover:text-quiz-secondary transition-colors">Privacy Policy</a></li>
               </ul>
             </div>
           </div>
@@ -65,14 +65,11 @@ const Footer = () => {
               © {new Date().getFullYear()} VidhaRith. All rights reserved.
             </div>
             <div className="flex space-x-6">
-              <a href="#" className="text-white/60 hover:text-quiz-secondary transition-colors">
+              <a href="https://x.com/DSToday1" className="text-white/60 hover:text-quiz-secondary transition-colors">
                 Twitter
               </a>
-              <a href="#" className="text-white/60 hover:text-quiz-secondary transition-colors">
+              <a href="https://www.linkedin.com/in/sai-rithvik-reddy-kanyagari-62252b23b/" className="text-white/60 hover:text-quiz-secondary transition-colors">
                 LinkedIn
-              </a>
-              <a href="#" className="text-white/60 hover:text-quiz-secondary transition-colors">
-                Facebook
               </a>
             </div>
           </div>
