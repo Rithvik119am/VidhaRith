@@ -22,6 +22,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { AlertCircle, CheckCircle, Clock, Info, Loader2, Ban } from 'lucide-react'; 
 
+interface FormQuestion {
+  _id: Id<'form_questions'>;
+  question: string;
+  selectOptions?: string[];
+}
+
 interface QuizFormValues {
   [questionId: string]: string;
 }
@@ -52,16 +58,33 @@ export default function Page({ params }: { params: { id: string } }) {
   const formId = formDetails?._id;
   const addResponse = useMutation(api.form_responses.addResponse);
 
-    const questions = useQuery(
+  const questions = useQuery(
     api.form_questions.getFormQuestionsForQuiz,
     formId ? { formId } : 'skip'
-  );
+  ) as FormQuestion[] | undefined;
+
+  // Add randomized questions and options
+  const randomizedQuestions = useMemo(() => {
+    if (!questions) return [];
+    
+    // Create a deep copy of questions to avoid mutating the original
+    const questionsCopy = JSON.parse(JSON.stringify(questions)) as FormQuestion[];
+    
+    // Randomize questions order
+    const shuffledQuestions = questionsCopy.sort(() => Math.random() - 0.5);
+    
+    // Randomize options for each question
+    return shuffledQuestions.map((question: FormQuestion) => ({
+      ...question,
+      selectOptions: question.selectOptions ? [...question.selectOptions].sort(() => Math.random() - 0.5) : []
+    }));
+  }, [questions]);
 
   const { formSchema, defaultVals } = useMemo(() => {
-    if (questions && questions.length > 0) {
+    if (randomizedQuestions && randomizedQuestions.length > 0) {
       const schemaShape: { [key: string]: z.ZodString } = {};
       const defaults: QuizFormValues = {};
-      questions.forEach((q) => {
+      randomizedQuestions.forEach((q: FormQuestion) => {
         schemaShape[q._id] = z.string({ required_error: "Please select an answer." })
                                 .min(1, { message: 'Please select an answer.' });
         defaults[q._id] = ''; 
@@ -69,7 +92,7 @@ export default function Page({ params }: { params: { id: string } }) {
       return { formSchema: z.object(schemaShape), defaultVals: defaults };
     }
     return { formSchema: z.object({}), defaultVals: {} };
-  }, [questions]); 
+  }, [randomizedQuestions]); 
 
   const form = useForm<QuizFormValues>({
     resolver: zodResolver(formSchema),
@@ -123,7 +146,7 @@ export default function Page({ params }: { params: { id: string } }) {
       availabilityStatus.available &&
       formDetails?.timeLimitMinutes !== undefined &&
       formDetails.timeLimitMinutes !== null &&
-      questions &&
+      randomizedQuestions &&
       !timeExpired;
 
     if (timerShouldBeActive && startTimeRef.current === null) {
@@ -167,11 +190,11 @@ export default function Page({ params }: { params: { id: string } }) {
       setTimeExpired(false); 
     };
 
-  }, [availabilityStatus.available, formDetails?.timeLimitMinutes, questions]); 
+  }, [availabilityStatus.available, formDetails?.timeLimitMinutes, randomizedQuestions]); 
 
 
   const handleSubmit = async (values: QuizFormValues) => {
-    if (!formId || !questions || !availabilityStatus.available || timeExpired) {
+    if (!formId || !randomizedQuestions || !availabilityStatus.available || timeExpired) {
        const reason = timeExpired ? "time limit expired" : (availabilityStatus.message || "form is unavailable");
        toast.error(`Cannot submit the form: ${reason}.`);
        if (timeExpired) setTimeExpired(true); 
@@ -180,14 +203,11 @@ export default function Page({ params }: { params: { id: string } }) {
 
     setIsSubmitting(true);
 
-    const responseValues = Object.entries(values).map(([questionId, selectedValue]) => {
-      const questionData = questions.find(q => q._id === questionId);
-      return {
-        questionId: questionId as Id<'form_questions'>,
-        question: questionData?.question ?? 'Unknown Question', 
-        userSelectedOption: selectedValue,
-      };
-    });
+    const responseValues = randomizedQuestions.map((question: FormQuestion) => ({
+      questionId: question._id,
+      question: question.question,
+      userSelectedOption: values[question._id] || '',
+    }));
 
     try {
       await addResponse({
@@ -226,7 +246,7 @@ export default function Page({ params }: { params: { id: string } }) {
     );
   }
 
-  if (questions === undefined && formId) {
+  if (randomizedQuestions === undefined && formId) {
     return (
       <FormSkeleton
         title={formDetails.name}
@@ -237,7 +257,7 @@ export default function Page({ params }: { params: { id: string } }) {
     );
   }
 
-  if (questions && questions.length === 0) {
+  if (randomizedQuestions && randomizedQuestions.length === 0) {
     return (
       <div className="container mx-auto p-4 md:p-8 max-w-2xl rounded-lg shadow-sm">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3">
@@ -255,13 +275,13 @@ export default function Page({ params }: { params: { id: string } }) {
     );
   }
 
-   if (Object.keys(formSchema.shape).length === 0 && questions && questions.length > 0) {
+   if (Object.keys(formSchema.shape).length === 0 && randomizedQuestions && randomizedQuestions.length > 0) {
      return (
        <FormSkeleton
          title={formDetails.name}
          description={formDetails.description}
          message="Initializing form..."
-         count={questions.length}
+         count={randomizedQuestions.length}
        />
      );
    }
@@ -319,7 +339,7 @@ export default function Page({ params }: { params: { id: string } }) {
           onSubmit={form.handleSubmit(handleSubmit)}
           className="space-y-8"
         >
-          {questions && questions.map((question, index) => (
+          {randomizedQuestions && randomizedQuestions.map((question: FormQuestion, index: number) => (
             <FormField
                 control={form.control}
                 name={question._id}
@@ -336,7 +356,7 @@ export default function Page({ params }: { params: { id: string } }) {
                       className="space-y-2"
                       disabled={timeExpired || isSubmitting}
                     >
-                      {question.selectOptions?.map((option, optIndex) => (
+                      {question.selectOptions?.map((option: string, optIndex: number) => (
                         <FormItem
                             key={`${question._id}-${optIndex}`}
                             className="flex items-center space-x-3 p-2 rounded hover:bg-gray-100 transition-colors"
