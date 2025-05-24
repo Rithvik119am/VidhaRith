@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { AlertCircle, CheckCircle, Clock, Info, Loader2, Ban } from 'lucide-react'; 
 
 interface FormQuestion {
-  _id: Id<'form_questions'>;
+  _id: string;
   question: string;
   selectOptions?: string[];
 }
@@ -68,13 +68,17 @@ export default function Page({ params }: { params: { id: string } }) {
     if (!questions) return [];
     
     // Create a deep copy of questions to avoid mutating the original
-    const questionsCopy = JSON.parse(JSON.stringify(questions)) as FormQuestion[];
+    const questionsCopy = questions.map(q => ({
+      ...q,
+      _id: q._id.toString(),
+      selectOptions: q.selectOptions ? [...q.selectOptions] : []
+    }));
     
     // Randomize questions order
     const shuffledQuestions = questionsCopy.sort(() => Math.random() - 0.5);
     
     // Randomize options for each question
-    return shuffledQuestions.map((question: FormQuestion) => ({
+    return shuffledQuestions.map(question => ({
       ...question,
       selectOptions: question.selectOptions ? [...question.selectOptions].sort(() => Math.random() - 0.5) : []
     }));
@@ -84,7 +88,7 @@ export default function Page({ params }: { params: { id: string } }) {
     if (randomizedQuestions && randomizedQuestions.length > 0) {
       const schemaShape: { [key: string]: z.ZodString } = {};
       const defaults: QuizFormValues = {};
-      randomizedQuestions.forEach((q: FormQuestion) => {
+      randomizedQuestions.forEach((q) => {
         schemaShape[q._id] = z.string({ required_error: "Please select an answer." })
                                 .min(1, { message: 'Please select an answer.' });
         defaults[q._id] = ''; 
@@ -203,8 +207,8 @@ export default function Page({ params }: { params: { id: string } }) {
 
     setIsSubmitting(true);
 
-    const responseValues = randomizedQuestions.map((question: FormQuestion) => ({
-      questionId: question._id,
+    const responseValues = randomizedQuestions.map((question) => ({
+      questionId: question._id as Id<'form_questions'>,
       question: question.question,
       userSelectedOption: values[question._id] || '',
     }));
