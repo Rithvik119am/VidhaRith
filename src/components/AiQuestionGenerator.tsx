@@ -91,7 +91,7 @@ export default function AiQuestionGenerator({ formId }: AiQuestionGeneratorProps
         }
     };
 
-    return (
+    return ( 
         <div className="rounded-md border p-4 md:p-6 space-y-4 bg-secondary/30"> 
             <h3 className="text-lg font-semibold mb-3">Generate Questions with AI</h3>
             <form onSubmit={handleGenerateSubmit} className="space-y-4">
@@ -113,6 +113,19 @@ export default function AiQuestionGenerator({ formId }: AiQuestionGeneratorProps
                 {sourceType === 'file' && (
                     <div>
                         <Label htmlFor="ai-file-select">Select File Content</Label>
+                        <div className="mb-2 flex flex-col md:flex-row md:items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                                To generate questions from a file, you must first upload it on the <a href="/dashboard/files" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">Files page</a>.
+                            </span>
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="w-fit"
+                            >
+                                <a href="/dashboard/files" target="_blank" rel="noopener noreferrer">Go to Files</a>
+                            </Button>
+                        </div>
                         {userFiles === undefined && <p className="text-sm text-muted-foreground">Loading files...</p>}
                         {userFiles && userFiles.length === 0 && <p className="text-sm text-muted-foreground">You haven&lsquo;t uploaded any files yet.</p>}
                         {userFiles && userFiles.length > 0 && (

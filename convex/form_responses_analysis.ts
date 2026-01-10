@@ -224,7 +224,7 @@ Use the match between \`userSelectedOption\` and \`correctAnswer\` to compute co
         try {
              console.log("Sending request to Google AI...");
              const { text } = await generateText({
-                 model: google('gemini-2.0-flash'),
+                 model: google('gemini-3-flash-preview'),
                  prompt: prompt,
              });
             llmResponseText = text;

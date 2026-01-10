@@ -203,7 +203,7 @@ Each question must be a JSON object with the following structure:
 \`\`\` ` 
 
                 const result = await generateText({
-                    model: google('gemini-2.0-flash'),
+                    model: google('gemini-3-flash-preview'),
                     messages: [
                         {
                             role: 'user',
@@ -380,7 +380,7 @@ Each question must be a JSON object with the following structure:
                 tools,
                 responseMimeType: 'text/plain',
             };
-            const model = 'gemini-2.0-flash';
+            const model = 'gemini-3-flash-preview';
             const contents = [
                 {
                 role: 'user',
