@@ -142,6 +142,49 @@ export const deleteQuestion = mutation({
     },
 });
 
+export const reorderQuestions = mutation({
+    args: {
+        formId: v.id("forms"),
+        questionIds: v.array(v.id("form_questions")),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (identity === null) {
+            throw new ConvexError("Not authenticated");
+        }
+
+        const form = await ctx.db.get(args.formId);
+        if (!form) {
+            throw new ConvexError("Form not found");
+        }
+        if (form.createdBy !== identity.subject) {
+            throw new ConvexError("User does not have permission to reorder questions in this form");
+        }
+
+        // Verify all question IDs belong to this form
+        for (const questionId of args.questionIds) {
+            const question = await ctx.db.get(questionId);
+            if (!question) {
+                throw new ConvexError(`Question ${questionId} not found`);
+            }
+            if (question.formId !== args.formId) {
+                throw new ConvexError(`Question ${questionId} does not belong to this form`);
+            }
+        }
+
+        // Update order for each question based on position in array
+        await Promise.all(
+            args.questionIds.map((questionId, index) =>
+                ctx.db.patch(questionId, {
+                    order: BigInt(index + 1),
+                })
+            )
+        );
+
+        return { success: true };
+    },
+});
+
 export const getFormQuestions = query({
     args: {
         formId: v.id("forms"),

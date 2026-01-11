@@ -1,4 +1,6 @@
+"use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface CTAButtonProps {
@@ -7,6 +9,7 @@ interface CTAButtonProps {
   variant?: "primary" | "secondary" | "outline";
   size?: "sm" | "md" | "lg";
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 const CTAButton = ({
@@ -15,6 +18,7 @@ const CTAButton = ({
   variant = "primary",
   size = "md",
   onClick,
+  disabled = false,
 }: CTAButtonProps) => {
   const variants = {
     primary: "bg-quiz-primary text-white hover:bg-quiz-primary/90",
@@ -29,17 +33,27 @@ const CTAButton = ({
   };
 
   return (
-    <button
+    <motion.button
       onClick={onClick}
+      disabled={disabled}
+      whileHover={{
+        scale: 1.03,
+        boxShadow: variant === "primary"
+          ? "0 10px 30px rgba(110, 89, 165, 0.35)"
+          : "0 10px 25px rgba(0, 0, 0, 0.1)"
+      }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
       className={cn(
-        "font-medium rounded-md transition-all duration-200 shadow-sm hover:shadow-md",
+        "font-medium rounded-lg transition-colors duration-200 shadow-sm relative overflow-hidden",
         variants[variant],
         sizes[size],
+        disabled && "opacity-50 cursor-not-allowed",
         className
       )}
     >
-      {children}
-    </button>
+      <span className="relative z-10">{children}</span>
+    </motion.button>
   );
 };
 

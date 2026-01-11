@@ -33,9 +33,6 @@ export default function RootLayout({
             </main>
 
           </ConvexClientProvider>
-          <footer className="flex justify-center items-center p-4 text-sm text-muted-foreground">
-            Made by K. Sai Rithvik Reddy
-          </footer>
         </div>
       </body>
     </html>

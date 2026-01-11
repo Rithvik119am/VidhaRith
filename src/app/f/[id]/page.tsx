@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api'; 
-import { Id } from '../../../../convex/_generated/dataModel'; 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -15,12 +15,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
-import { AlertCircle, CheckCircle, Clock, Info, Loader2, Ban } from 'lucide-react'; 
+} from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Loader2,
+  Ban,
+  Sparkles,
+  Send,
+  PartyPopper,
+} from "lucide-react";
 
 interface FormQuestion {
   _id: string;
@@ -36,7 +44,7 @@ function formatTime(totalSeconds: number | null): string {
   if (totalSeconds === null || totalSeconds < 0) totalSeconds = 0;
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = Math.floor(totalSeconds % 60);
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
 export default function Page({ params }: { params: { id: string } }) {
@@ -45,7 +53,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [timeExpired, setTimeExpired] = useState(false); 
+  const [timeExpired, setTimeExpired] = useState(false);
   const [availabilityStatus, setAvailabilityStatus] = useState<{
     available: boolean;
     message: string | null;
@@ -60,27 +68,25 @@ export default function Page({ params }: { params: { id: string } }) {
 
   const questions = useQuery(
     api.form_questions.getFormQuestionsForQuiz,
-    formId ? { formId } : 'skip'
+    formId ? { formId } : "skip"
   ) as FormQuestion[] | undefined;
 
-  // Add randomized questions and options
   const randomizedQuestions = useMemo(() => {
     if (!questions) return [];
-    
-    // Create a deep copy of questions to avoid mutating the original
-    const questionsCopy = questions.map(q => ({
+
+    const questionsCopy = questions.map((q) => ({
       ...q,
       _id: q._id.toString(),
-      selectOptions: q.selectOptions ? [...q.selectOptions] : []
+      selectOptions: q.selectOptions ? [...q.selectOptions] : [],
     }));
-    
-    // Randomize questions order
+
     const shuffledQuestions = questionsCopy.sort(() => Math.random() - 0.5);
-    
-    // Randomize options for each question
-    return shuffledQuestions.map(question => ({
+
+    return shuffledQuestions.map((question) => ({
       ...question,
-      selectOptions: question.selectOptions ? [...question.selectOptions].sort(() => Math.random() - 0.5) : []
+      selectOptions: question.selectOptions
+        ? [...question.selectOptions].sort(() => Math.random() - 0.5)
+        : [],
     }));
   }, [questions]);
 
@@ -89,26 +95,27 @@ export default function Page({ params }: { params: { id: string } }) {
       const schemaShape: { [key: string]: z.ZodString } = {};
       const defaults: QuizFormValues = {};
       randomizedQuestions.forEach((q) => {
-        schemaShape[q._id] = z.string({ required_error: "Please select an answer." })
-                                .min(1, { message: 'Please select an answer.' });
-        defaults[q._id] = ''; 
+        schemaShape[q._id] = z
+          .string({ required_error: "Please select an answer." })
+          .min(1, { message: "Please select an answer." });
+        defaults[q._id] = "";
       });
       return { formSchema: z.object(schemaShape), defaultVals: defaults };
     }
     return { formSchema: z.object({}), defaultVals: {} };
-  }, [randomizedQuestions]); 
+  }, [randomizedQuestions]);
 
   const form = useForm<QuizFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultVals,
-    mode: 'onChange', 
+    mode: "onChange",
   });
 
   useEffect(() => {
-     if (Object.keys(defaultVals).length > 0 || Object.keys(form.formState.defaultValues || {}).length > 0) {
-         form.reset(defaultVals);
-     }
-  }, [formSchema, defaultVals, form.reset]); 
+    if (Object.keys(defaultVals).length > 0 || Object.keys(form.formState.defaultValues || {}).length > 0) {
+      form.reset(defaultVals);
+    }
+  }, [formSchema, defaultVals, form.reset]);
 
   useEffect(() => {
     if (formDetails === undefined) {
@@ -129,21 +136,18 @@ export default function Page({ params }: { params: { id: string } }) {
       isAvailable = false;
       message = "This form is currently not accepting responses.";
       icon = Ban;
-    }
-    else if (formDetails.startTime && now < formDetails.startTime) {
+    } else if (formDetails.startTime && now < formDetails.startTime) {
       isAvailable = false;
       message = `This form is not open yet. It opens on ${new Date(Number(formDetails.startTime)).toLocaleString()}.`;
       icon = Clock;
-    }
-    else if (formDetails.endTime && now > formDetails.endTime) {
+    } else if (formDetails.endTime && now > formDetails.endTime) {
       isAvailable = false;
       message = `This form is closed. It stopped accepting responses on ${new Date(Number(formDetails.endTime)).toLocaleString()}.`;
-       icon = Clock;
+      icon = Clock;
     }
 
     setAvailabilityStatus({ available: isAvailable, message, icon });
-
-  }, [formDetails, slug]); 
+  }, [formDetails, slug]);
 
   useEffect(() => {
     const timerShouldBeActive =
@@ -155,9 +159,9 @@ export default function Page({ params }: { params: { id: string } }) {
 
     if (timerShouldBeActive && startTimeRef.current === null) {
       const startTime = Date.now();
-      startTimeRef.current = startTime; 
+      startTimeRef.current = startTime;
       const limitSeconds = Number(formDetails.timeLimitMinutes) * 60;
-      setTimeLeft(limitSeconds); 
+      setTimeLeft(limitSeconds);
 
       const intervalId = setInterval(() => {
         const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current!) / 1000);
@@ -165,24 +169,21 @@ export default function Page({ params }: { params: { id: string } }) {
 
         if (remaining <= 0) {
           setTimeLeft(0);
-          setTimeExpired(true); 
-          clearInterval(intervalId); 
-          timerIntervalRef.current = null; 
+          setTimeExpired(true);
+          clearInterval(intervalId);
+          timerIntervalRef.current = null;
           toast.warning("Time's up! Your responses cannot be submitted.", { duration: 10000 });
         } else {
-          setTimeLeft(remaining); 
+          setTimeLeft(remaining);
         }
-      }, 1000); 
+      }, 1000);
 
-      timerIntervalRef.current = intervalId; 
-
+      timerIntervalRef.current = intervalId;
     } else if (!timerShouldBeActive && timerIntervalRef.current) {
-       clearInterval(timerIntervalRef.current);
-       timerIntervalRef.current = null;
-       startTimeRef.current = null; 
-       setTimeLeft(null); 
-       
-
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+      startTimeRef.current = null;
+      setTimeLeft(null);
     }
     return () => {
       if (timerIntervalRef.current) {
@@ -191,282 +192,421 @@ export default function Page({ params }: { params: { id: string } }) {
       }
       startTimeRef.current = null;
       setTimeLeft(null);
-      setTimeExpired(false); 
+      setTimeExpired(false);
     };
-
-  }, [availabilityStatus.available, formDetails?.timeLimitMinutes, randomizedQuestions]); 
-
+  }, [availabilityStatus.available, formDetails?.timeLimitMinutes, randomizedQuestions]);
 
   const handleSubmit = async (values: QuizFormValues) => {
     if (!formId || !randomizedQuestions || !availabilityStatus.available || timeExpired) {
-       const reason = timeExpired ? "time limit expired" : (availabilityStatus.message || "form is unavailable");
-       toast.error(`Cannot submit the form: ${reason}.`);
-       if (timeExpired) setTimeExpired(true); 
-       return; 
+      const reason = timeExpired ? "time limit expired" : (availabilityStatus.message || "form is unavailable");
+      toast.error(`Cannot submit the form: ${reason}.`);
+      if (timeExpired) setTimeExpired(true);
+      return;
     }
 
     setIsSubmitting(true);
 
     const responseValues = randomizedQuestions.map((question) => ({
-      questionId: question._id as Id<'form_questions'>,
+      questionId: question._id as Id<"form_questions">,
       question: question.question,
-      userSelectedOption: values[question._id] || '',
+      userSelectedOption: values[question._id] || "",
     }));
 
     try {
       await addResponse({
         slug: slug,
         values: responseValues,
-        sessionStartTime: startTimeRef.current ? BigInt(startTimeRef.current) : undefined, 
+        sessionStartTime: startTimeRef.current ? BigInt(startTimeRef.current) : undefined,
       });
-      setIsSubmitted(true); 
-      toast.success('Your submission was recorded. Thank you ❤️');
+      setIsSubmitted(true);
+      toast.success("Your submission was recorded. Thank you!");
     } catch (error: any) {
-      console.error('Submission failed:', error);
-      toast.error(`Submission failed: ${error.data?.message || error.message || 'An unknown error occurred.'}`);
+      console.error("Submission failed:", error);
+      toast.error(`Submission failed: ${error.data?.message || error.message || "An unknown error occurred."}`);
     } finally {
-      setIsSubmitting(false); 
+      setIsSubmitting(false);
     }
   };
 
-  if (formDetails === undefined) {
-    return <FormSkeleton message="Loading form details..." />;
-  }
-  if (formDetails === null) {
-     return (
-       <FormClosedMessage
-         message={availabilityStatus.message ?? `Form not found for slug: ${slug}`}
-         icon={availabilityStatus.icon ?? AlertCircle}
-       />
-     );
-   }
+  const answeredCount = Object.values(form.watch()).filter((v) => v).length;
+  const totalQuestions = randomizedQuestions?.length || 0;
+  const progress = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
 
+  // Loading state
+  if (formDetails === undefined) {
+    return <QuizSkeleton message="Loading quiz..." />;
+  }
+
+  // Form not found
+  if (formDetails === null) {
+    return (
+      <StatusMessage
+        type="error"
+        title="Quiz Not Found"
+        message={`We couldn't find a quiz with the URL "${slug}"`}
+        icon={AlertCircle}
+      />
+    );
+  }
+
+  // Form unavailable
   if (!availabilityStatus.available) {
     return (
-      <FormClosedMessage
-        message={availabilityStatus.message ?? "This form is currently unavailable."}
+      <StatusMessage
+        type="warning"
+        title="Quiz Unavailable"
+        message={availabilityStatus.message ?? "This quiz is currently unavailable."}
         icon={availabilityStatus.icon ?? Ban}
       />
     );
   }
 
+  // Loading questions
   if (randomizedQuestions === undefined && formId) {
+    return <QuizSkeleton title={formDetails.name} message="Loading questions..." />;
+  }
+
+  // No questions
+  if (randomizedQuestions && randomizedQuestions.length === 0) {
     return (
-      <FormSkeleton
-        title={formDetails.name}
-        description={formDetails.description}
-        message="Loading questions..."
-        count={3} 
+      <StatusMessage
+        type="info"
+        title={formDetails.name || "Quiz"}
+        message="This quiz currently has no questions to display."
+        icon={AlertCircle}
       />
     );
   }
 
-  if (randomizedQuestions && randomizedQuestions.length === 0) {
-    return (
-      <div className="container mx-auto p-4 md:p-8 max-w-2xl rounded-lg shadow-sm">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3">
-          {formDetails.name || slug}
-        </h1>
-        {formDetails.description && (
-          <p className="text-muted-foreground mb-6 text-sm sm:text-base">
-            {formDetails.description}
-          </p>
-        )}
-        <div className="text-center text-muted-foreground mt-10 p-6 border border-dashed rounded-md">
-          This form currently has no questions to display.
-        </div>
-      </div>
-    );
+  // Form schema not ready
+  if (Object.keys(formSchema.shape).length === 0 && randomizedQuestions && randomizedQuestions.length > 0) {
+    return <QuizSkeleton title={formDetails.name} message="Preparing quiz..." />;
   }
 
-   if (Object.keys(formSchema.shape).length === 0 && randomizedQuestions && randomizedQuestions.length > 0) {
-     return (
-       <FormSkeleton
-         title={formDetails.name}
-         description={formDetails.description}
-         message="Initializing form..."
-         count={randomizedQuestions.length}
-       />
-     );
-   }
-
-
+  // Success state
   if (isSubmitted) {
     return (
-      <div className="container mx-auto p-4 md:p-8 max-w-2xl">
-          <div className="text-center p-8 rounded-lg shadow-md border border-green-200 bg-green-50">
-            <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-            <h2 className="text-green-700 text-xl sm:text-2xl font-semibold mb-3">
-              Thank You!
-            </h2>
-            <p className="text-green-600 text-sm sm:text-base">
-              Your submission has been successfully recorded.
-            </p>
-          </div>
-      </div>
-    );
-  }
-
-  if (timeExpired) {
-     return (
-        <FormClosedMessage 
-           message="Time's Up! You can no longer submit this form."
-           icon={Clock} // Use the clock icon
-        />
-     );
-  }
-
-
-  return (
-    <div className="container mx-auto p-4 md:p-8 max-w-2xl rounded-lg shadow-md">
-      <div className="mb-6 border-b pb-4">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">{formDetails.name || slug}</h1>
-        {formDetails.description && (
-          <p className="text-gray-600 text-sm md:text-base">{formDetails.description}</p>
-        )}
-      </div>
-
-      {formDetails.timeLimitMinutes !== undefined && formDetails.timeLimitMinutes !== null && (
-         <>
-          {(timeLeft !== null) && (
-              <div className={`sticky top-0 z-10 mb-6 p-3 rounded-md border flex items-center justify-center space-x-2 text-sm sm:text-base font-medium shadow-sm ${timeExpired ? 'bg-red-100 border-red-300 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
-                  <Clock className="h-5 w-5" />
-                  <span>Time Remaining: {formatTime(timeLeft)}</span>
-              </div>
-          )}
-         </>
-      )}
-
-
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-8"
+      <div className="min-h-screen bg-gradient-to-br from-white via-quiz-light/30 to-quiz-mint/20 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full text-center"
         >
-          {randomizedQuestions && randomizedQuestions.map((question: FormQuestion, index: number) => (
-            <FormField
-                control={form.control}
-                name={question._id}
-                key={question._id}
-                render={({ field }) => (
-                <FormItem className="bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200 space-y-3">
-                  <FormLabel className="text-base sm:text-lg font-semibold !mb-3 block text-gray-800">
-                    {`${index + 1}. ${question.question}`}
-                  </FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="space-y-2"
-                      disabled={timeExpired || isSubmitting}
-                    >
-                      {question.selectOptions?.map((option: string, optIndex: number) => (
-                        <FormItem
-                            key={`${question._id}-${optIndex}`}
-                            className="flex items-center space-x-3 p-2 rounded hover:bg-gray-100 transition-colors"
-                        >
-                            <FormControl>
-                                <RadioGroupItem
-                                    value={option}
-                                    id={`${question._id}-${optIndex}`}
-                                />
-                            </FormControl>
-                            <Label
-                                htmlFor={`${question._id}-${optIndex}`}
-                                className="font-normal text-sm sm:text-base text-gray-700 cursor-pointer flex-1"
-                            >
-                                {option}
-                            </Label>
-                        </FormItem>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage className="text-red-600 text-xs pt-1" />
-                </FormItem>
-              )}
-            />
-          ))}
-
-          <div className="pt-4 flex justify-end">
-            <Button
-              type="submit"
-              disabled={isSubmitting || timeExpired || !form.formState.isValid}
-              className="min-w-[120px] text-base"
-              aria-live="polite"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : timeExpired ? (
-                 "Time Expired" 
-              ) : (
-                "Submit Answers"
-              )}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
-  );
-}
-
-function FormSkeleton({
-  title,
-  description,
-  message = 'Loading...',
-  count = 3,
-}: {
-  title?: string | null;
-  description?: string | null;
-  message?: string;
-  count?: number;
-}) {
-  return (
-    <div className="container mx-auto p-4 md:p-8 max-w-2xl  rounded-lg shadow-md animate-pulse">
-      <div className="mb-6 border-b pb-4">
-        {title ? <h1 className="text-2xl md:text-3xl font-bold mb-2">{title}</h1> : <Skeleton className="h-8 w-3/4 mb-2" />}
-        {description ? <p className="text-gray-600 text-sm md:text-base">{description}</p> : <Skeleton className="h-5 w-full" />}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-quiz-mint to-emerald-400 flex items-center justify-center shadow-2xl shadow-quiz-mint/30"
+          >
+            <PartyPopper className="w-12 h-12 text-white" />
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-3xl font-bold text-gray-900 mb-4"
+          >
+            Thank You!
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-gray-600 text-lg"
+          >
+            Your answers have been submitted successfully.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-quiz-mint/20"
+          >
+            <p className="text-sm text-gray-500">
+              Your responses are anonymous and will help improve learning outcomes.
+            </p>
+          </motion.div>
+        </motion.div>
       </div>
-
-      <div className="text-center my-6 font-medium text-muted-foreground flex items-center justify-center space-x-2">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <span>{message}</span>
-      </div>
-
-      <div className="space-y-8">
-        {[...Array(count)].map((_, i) => (
-          <div key={i} className="space-y-4 p-4 sm:p-6 border rounded-lg bg-gray-50">
-            <Skeleton className="h-6 w-5/6 mb-3" />
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center space-x-3"><Skeleton className="h-5 w-5 rounded-full" /><Skeleton className="h-5 w-2/3" /></div>
-              <div className="flex items-center space-x-3"><Skeleton className="h-5 w-5 rounded-full" /><Skeleton className="h-5 w-1/2" /></div>
-              <div className="flex items-center space-x-3"><Skeleton className="h-5 w-5 rounded-full" /><Skeleton className="h-5 w-3/4" /></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="pt-8 flex justify-end">
-        <Skeleton className="h-10 w-32" />
-      </div>
-    </div>
-  );
-}
-
-function FormClosedMessage({ message, icon: Icon = Info }: { message: string, icon?: React.ElementType }) {
-    return (
-        <div className="container mx-auto p-4 md:p-8 max-w-2xl">
-             <div className="text-center p-8 rounded-lg shadow-md border border-yellow-200 bg-yellow-50">
-                 <Icon className="mx-auto h-10 w-10 text-yellow-500 mb-4" />
-                <h2 className="text-yellow-700 text-lg sm:text-xl font-semibold mb-2">
-                   Status Update
-                </h2>
-                <p className="text-yellow-600 text-sm sm:text-base">
-                    {message}
-                </p>
-            </div>
-        </div>
     );
+  }
+
+  // Time expired
+  if (timeExpired) {
+    return (
+      <StatusMessage
+        type="error"
+        title="Time's Up!"
+        message="The time limit for this quiz has expired. You can no longer submit your answers."
+        icon={Clock}
+      />
+    );
+  }
+
+  // Main quiz view
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-quiz-light/20">
+      {/* Sticky Header with Progress */}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100"
+      >
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-quiz-primary to-quiz-secondary flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="font-bold text-gray-900 line-clamp-1">{formDetails.name || "Quiz"}</h1>
+                <p className="text-xs text-gray-500">
+                  {answeredCount} of {totalQuestions} answered
+                </p>
+              </div>
+            </div>
+
+            {timeLeft !== null && (
+              <motion.div
+                animate={{ scale: timeLeft <= 60 ? [1, 1.05, 1] : 1 }}
+                transition={{ duration: 0.5, repeat: timeLeft <= 60 ? Infinity : 0 }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-sm font-semibold ${
+                  timeLeft <= 60
+                    ? "bg-red-50 text-red-600 border border-red-200"
+                    : "bg-quiz-primary/10 text-quiz-primary"
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                {formatTime(timeLeft)}
+              </motion.div>
+            )}
+          </div>
+
+          {/* Progress Bar */}
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3 }}
+              className="h-full bg-gradient-to-r from-quiz-primary to-quiz-secondary rounded-full"
+            />
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Quiz Content */}
+      <main className="max-w-3xl mx-auto px-4 py-8">
+        {formDetails.description && (
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-gray-600 mb-8 text-center"
+          >
+            {formDetails.description}
+          </motion.p>
+        )}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <AnimatePresence>
+              {randomizedQuestions &&
+                randomizedQuestions.map((question: FormQuestion, index: number) => (
+                  <motion.div
+                    key={question._id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <FormField
+                      control={form.control}
+                      name={question._id}
+                      render={({ field }) => (
+                        <FormItem className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                          {/* Question Header */}
+                          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+                            <FormLabel className="text-base font-semibold text-gray-900 flex items-start gap-3">
+                              <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-quiz-primary/10 text-quiz-primary flex items-center justify-center text-sm font-bold">
+                                {index + 1}
+                              </span>
+                              <span className="pt-1">{question.question}</span>
+                            </FormLabel>
+                          </div>
+
+                          {/* Options */}
+                          <div className="p-4">
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                className="space-y-2"
+                                disabled={timeExpired || isSubmitting}
+                              >
+                                {question.selectOptions?.map((option: string, optIndex: number) => {
+                                  const isSelected = field.value === option;
+                                  return (
+                                    <FormItem key={`${question._id}-${optIndex}`} className="flex items-center space-x-0">
+                                      <FormControl>
+                                        <RadioGroupItem
+                                          value={option}
+                                          id={`${question._id}-${optIndex}`}
+                                          className="sr-only"
+                                        />
+                                      </FormControl>
+                                      <Label
+                                        htmlFor={`${question._id}-${optIndex}`}
+                                        className={`flex-1 p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                                          isSelected
+                                            ? "border-quiz-primary bg-quiz-primary/5 text-quiz-primary"
+                                            : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <div
+                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                              isSelected
+                                                ? "border-quiz-primary bg-quiz-primary"
+                                                : "border-gray-300"
+                                            }`}
+                                          >
+                                            {isSelected && (
+                                              <motion.div
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                className="w-2 h-2 bg-white rounded-full"
+                                              />
+                                            )}
+                                          </div>
+                                          <span className={`text-sm ${isSelected ? "font-medium" : "text-gray-700"}`}>
+                                            {option}
+                                          </span>
+                                        </div>
+                                      </Label>
+                                    </FormItem>
+                                  );
+                                })}
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage className="text-red-500 text-xs mt-2 px-2" />
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                ))}
+            </AnimatePresence>
+
+            {/* Submit Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="pt-6"
+            >
+              <motion.button
+                type="submit"
+                disabled={isSubmitting || timeExpired || !form.formState.isValid}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-quiz-primary to-quiz-secondary text-white font-semibold rounded-2xl shadow-xl shadow-quiz-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : timeExpired ? (
+                  "Time Expired"
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Submit Answers
+                  </>
+                )}
+              </motion.button>
+
+              {!form.formState.isValid && answeredCount < totalQuestions && (
+                <p className="text-center text-sm text-gray-500 mt-3">
+                  Please answer all questions to submit
+                </p>
+              )}
+            </motion.div>
+          </form>
+        </Form>
+      </main>
+    </div>
+  );
+}
+
+function QuizSkeleton({ title, message = "Loading..." }: { title?: string | null; message?: string }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-quiz-light/20 flex items-center justify-center p-4">
+      <div className="max-w-md w-full text-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-quiz-primary to-quiz-secondary flex items-center justify-center"
+        >
+          <Sparkles className="w-8 h-8 text-white" />
+        </motion.div>
+        {title && <h1 className="text-xl font-bold text-gray-900 mb-2">{title}</h1>}
+        <p className="text-gray-500">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+function StatusMessage({
+  type,
+  title,
+  message,
+  icon: Icon,
+}: {
+  type: "error" | "warning" | "info";
+  title: string;
+  message: string;
+  icon: React.ElementType;
+}) {
+  const colors = {
+    error: {
+      bg: "from-red-50 to-orange-50",
+      icon: "from-red-400 to-orange-400",
+      text: "text-red-600",
+      border: "border-red-100",
+    },
+    warning: {
+      bg: "from-yellow-50 to-amber-50",
+      icon: "from-yellow-400 to-amber-400",
+      text: "text-yellow-700",
+      border: "border-yellow-100",
+    },
+    info: {
+      bg: "from-blue-50 to-sky-50",
+      icon: "from-blue-400 to-sky-400",
+      text: "text-blue-600",
+      border: "border-blue-100",
+    },
+  };
+
+  const c = colors[type];
+
+  return (
+    <div className={`min-h-screen bg-gradient-to-br ${c.bg} flex items-center justify-center p-4`}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center border ${c.border}`}
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+          className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${c.icon} flex items-center justify-center`}
+        >
+          <Icon className="w-10 h-10 text-white" />
+        </motion.div>
+        <h1 className={`text-2xl font-bold mb-3 ${c.text}`}>{title}</h1>
+        <p className="text-gray-600">{message}</p>
+      </motion.div>
+    </div>
+  );
 }

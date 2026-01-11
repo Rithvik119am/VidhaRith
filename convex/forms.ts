@@ -218,3 +218,27 @@ export const getFormForOwner = internalQuery({
         return await ctx.db.get(args.formId);
     },
 });
+
+export const checkSlugAvailability = query({
+    args: {
+        slug: v.string(),
+        excludeFormId: v.optional(v.id("forms")),
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query("forms")
+            .filter((q) => q.eq(q.field("slug"), args.slug))
+            .first();
+
+        if (!existing) {
+            return { available: true };
+        }
+
+        // If excludeFormId is provided and matches, the slug is available for this form
+        if (args.excludeFormId && existing._id === args.excludeFormId) {
+            return { available: true };
+        }
+
+        return { available: false };
+    },
+});
